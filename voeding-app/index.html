@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0a0e14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Voeding">
+<title>Voeding tracker v0</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<style>
+:root {
+  --bg: #0a0e14; --c: #161b24; --c2: #1e2532; --b: rgba(255,255,255,0.08);
+  --t: #e8edf3; --td: #a0aab8; --tf: #6c7689;
+  --a: #60d394; --d: #e76f51; --w: #f4a261; --n: #5fa8d3; --p: #b794f4;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 80px) env(safe-area-inset-left)}
+.tnum{font-variant-numeric:tabular-nums}
+
+.app{max-width:680px;margin:0 auto;padding:16px}
+.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.hd h1{font-size:22px;font-weight:600;letter-spacing:-0.4px}
+.hd .date{font-size:12px;color:var(--td);text-align:right}
+.hd .date .day{font-size:14px;color:var(--t);font-weight:500}
+
+.summary{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:16px;margin-bottom:16px}
+.s-title{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--td);margin-bottom:10px}
+.s-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.s-cell{text-align:center;padding:10px 4px;background:var(--c2);border-radius:8px}
+.s-val{font-size:18px;font-weight:600;color:var(--t);font-variant-numeric:tabular-nums}
+.s-tar{font-size:10px;color:var(--tf)}
+.s-lbl{font-size:9px;color:var(--td);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.s-bar{height:3px;background:var(--c);border-radius:2px;margin-top:6px;overflow:hidden}
+.s-bar-fill{height:100%;background:var(--a);transition:width .3s}
+.s-bar-fill.over{background:var(--d)}
+.s-bar-fill.warn{background:var(--w)}
+
+.entries{margin-bottom:16px}
+.section-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 4px}
+.section-h h2{font-size:13px;font-weight:600;color:var(--td);text-transform:uppercase;letter-spacing:0.5px}
+.entry{background:var(--c);border:1px solid var(--b);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.entry:active{background:var(--c2)}
+.e-l{flex:1;min-width:0}
+.e-name{font-weight:500;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.e-meta{font-size:11px;color:var(--td);margin-top:2px}
+.e-r{text-align:right;margin-left:8px}
+.e-cal{font-weight:600;color:var(--a);font-variant-numeric:tabular-nums}
+.e-mac{font-size:10px;color:var(--tf);font-variant-numeric:tabular-nums}
+.empty{text-align:center;padding:30px 20px;color:var(--tf);font-size:13px;font-style:italic}
+
+.fab{position:fixed;bottom:calc(env(safe-area-inset-bottom) + 20px);right:20px;left:20px;max-width:640px;margin:0 auto;background:var(--a);color:var(--bg);border:none;border-radius:14px;padding:18px;font-size:16px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.4);cursor:pointer;z-index:10}
+.fab:active{transform:scale(0.97)}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:flex-end;z-index:20;backdrop-filter:blur(6px)}
+.modal.open{display:flex}
+.modal-c{background:var(--bg);width:100%;max-width:680px;margin:0 auto;border-radius:20px 20px 0 0;padding:20px;max-height:90vh;overflow-y:auto;border-top:1px solid var(--b)}
+.modal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal-h h3{font-size:18px;font-weight:600}
+.close-btn{background:var(--c2);border:none;color:var(--t);width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;color:var(--td);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
+.field input,.field select{width:100%;background:var(--c);border:1px solid var(--b);border-radius:10px;padding:14px;color:var(--t);font-size:16px;font-family:inherit}
+.field input:focus,.field select:focus{outline:none;border-color:var(--n)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.btn{width:100%;background:var(--a);color:var(--bg);border:none;padding:16px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:8px}
+.btn:active{transform:scale(0.97)}
+.btn-secondary{background:var(--c2);color:var(--t)}
+.btn-danger{background:var(--d);color:var(--t)}
+
+.recent-foods{margin-bottom:14px}
+.recent-foods h4{font-size:11px;color:var(--td);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--c2);border:1px solid var(--b);border-radius:18px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--t)}
+.chip:active{background:var(--n);color:var(--bg)}
+
+.meal-tabs{display:flex;gap:4px;background:var(--c);border-radius:10px;padding:4px;margin-bottom:14px}
+.meal-tab{flex:1;text-align:center;padding:8px 4px;background:transparent;border:none;color:var(--td);font-size:12px;border-radius:8px;cursor:pointer;font-family:inherit}
+.meal-tab.active{background:var(--n);color:var(--bg);font-weight:600}
+
+.settings-link{font-size:11px;color:var(--n);text-decoration:none;cursor:pointer}
+
+@media(max-width:380px){
+  .s-val{font-size:16px}
+  .row4{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hd">
+    <div>
+      <h1>🥗 Voeding</h1>
+      <div style="font-size:11px;color:var(--tf);margin-top:2px">v0 · prototype</div>
+    </div>
+    <div class="date">
+      <div class="day" id="day">Vandaag</div>
+      <div id="dayOf"></div>
+      <a class="settings-link" id="settings-btn">⚙️ Targets</a>
+    </div>
+  </header>
+
+  <div class="summary">
+    <div class="s-title">Vandaag · <span id="totals-status">0% van target</span></div>
+    <div class="s-grid">
+      <div class="s-cell">
+        <div class="s-val tnum" id="t-cal">0</div>
+        <div class="s-tar tnum">/ <span id="g-cal">2200</span></div>
+        <div class="s-lbl">kcal</div>
+        <div class="s-bar"><div class="s-bar-fill" id="b-cal" style="width:0%"></div></div>
+      </div>
+      <div class="s-cell">
+        <div class="s-val tnum" id="t-pro">0</div>
+        <div class="s-tar tnum">/ <span id="g-pro">150</span>g</div>
+        <div class="s-lbl">eiwit</div>
+        <div class="s-bar"><div class="s-bar-fill" id="b-pro" style="width:0%"></div></div>
+      </div>
+      <div class="s-cell">
+        <div class="s-val tnum" id="t-car">0</div>
+        <div class="s-tar tnum">/ <span id="g-car">220</span>g</div>
+        <div class="s-lbl">koolh.</div>
+        <div class="s-bar"><div class="s-bar-fill" id="b-car" style="width:0%"></div></div>
+      </div>
+      <div class="s-cell">
+        <div class="s-val tnum" id="t-fat">0</div>
+        <div class="s-tar tnum">/ <span id="g-fat">75</span>g</div>
+        <div class="s-lbl">vet</div>
+        <div class="s-bar"><div class="s-bar-fill" id="b-fat" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="entries">
+    <div class="section-h"><h2 id="entries-count">Maaltijden</h2><span style="font-size:11px;color:var(--tf)" id="entries-info"></span></div>
+    <div id="entries-list"></div>
+  </div>
+</div>
+
+<button class="fab" id="add-btn">+ Toevoegen</button>
+
+<!-- ADD MODAL -->
+<div class="modal" id="add-modal">
+  <div class="modal-c">
+    <div class="modal-h">
+      <h3 id="modal-title">Toevoegen</h3>
+      <button class="close-btn" id="add-close">×</button>
+    </div>
+
+    <div class="meal-tabs">
+      <button class="meal-tab active" data-meal="ontbijt">🌅 Ontbijt</button>
+      <button class="meal-tab" data-meal="lunch">☀️ Lunch</button>
+      <button class="meal-tab" data-meal="diner">🌙 Diner</button>
+      <button class="meal-tab" data-meal="snack">🍎 Snack</button>
+    </div>
+
+    <div class="recent-foods" id="recent-foods-block" style="display:none">
+      <h4>Recent gegeten</h4>
+      <div class="chip-row" id="recent-chips"></div>
+    </div>
+
+    <div class="field">
+      <label>Wat heb je gegeten?</label>
+      <input type="text" id="i-name" placeholder="bv. Havermout met blauwe bessen" autocomplete="off">
+    </div>
+    <div class="row4">
+      <div class="field">
+        <label>kcal</label>
+        <input type="number" inputmode="numeric" id="i-cal" placeholder="0" min="0" max="5000">
+      </div>
+      <div class="field">
+        <label>eiwit (g)</label>
+        <input type="number" inputmode="decimal" id="i-pro" placeholder="0" min="0" max="500">
+      </div>
+      <div class="field">
+        <label>koolh. (g)</label>
+        <input type="number" inputmode="decimal" id="i-car" placeholder="0" min="0" max="500">
+      </div>
+      <div class="field">
+        <label>vet (g)</label>
+        <input type="number" inputmode="decimal" id="i-fat" placeholder="0" min="0" max="500">
+      </div>
+    </div>
+    <button class="btn" id="i-save">Opslaan</button>
+    <button class="btn btn-secondary" id="i-delete" style="display:none;margin-top:8px">Verwijderen</button>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal" id="set-modal">
+  <div class="modal-c">
+    <div class="modal-h">
+      <h3>⚙️ Daily targets</h3>
+      <button class="close-btn" id="set-close">×</button>
+    </div>
+    <p style="color:var(--td);font-size:12px;margin-bottom:14px">Pas je dagelijkse doelen aan. Defaults zijn algemene richtwaarden — gebruik macro-calculator van je dietist voor accuraat.</p>
+    <div class="row2">
+      <div class="field">
+        <label>kcal/dag</label>
+        <input type="number" inputmode="numeric" id="g-cal-i" min="500" max="6000">
+      </div>
+      <div class="field">
+        <label>eiwit (g)</label>
+        <input type="number" inputmode="numeric" id="g-pro-i" min="20" max="500">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>koolh. (g)</label>
+        <input type="number" inputmode="numeric" id="g-car-i" min="20" max="800">
+      </div>
+      <div class="field">
+        <label>vet (g)</label>
+        <input type="number" inputmode="numeric" id="g-fat-i" min="20" max="300">
+      </div>
+    </div>
+    <button class="btn" id="g-save">Opslaan</button>
+    <button class="btn btn-secondary" id="g-export" style="margin-top:8px">📤 Backup downloaden</button>
+    <button class="btn btn-secondary" id="g-import" style="margin-top:8px">📥 Importeren</button>
+    <input type="file" id="g-import-file" accept=".json" style="display:none">
+  </div>
+</div>
+
+<script>
+// ===== CONFIG (defaults - edit via Settings) =====
+const DEFAULT_GOALS = { cal: 2200, pro: 150, car: 220, fat: 75 };
+
+// ===== STATE =====
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const todayKey = () => new Date().toISOString().split('T')[0];
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+let state = loadState();
+let editingId = null;
+let currentMeal = 'ontbijt';
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('voeding:state');
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (!s.entries) s.entries = [];
+      if (!s.goals) s.goals = {...DEFAULT_GOALS};
+      return s;
+    }
+  } catch(e) {}
+  return { entries: [], goals: {...DEFAULT_GOALS}, version: 1 };
+}
+
+function saveState() {
+  localStorage.setItem('voeding:state', JSON.stringify(state));
+}
+
+function todaysEntries() {
+  const today = todayKey();
+  return state.entries.filter(e => e.date === today);
+}
+
+function todaysTotals() {
+  return todaysEntries().reduce((acc, e) => ({
+    cal: acc.cal + (e.cal||0),
+    pro: acc.pro + (e.pro||0),
+    car: acc.car + (e.car||0),
+    fat: acc.fat + (e.fat||0)
+  }), {cal:0,pro:0,car:0,fat:0});
+}
+
+function getRecentFoods() {
+  // Last 14 days, unique by name, top 8 most-used
+  const cutoff = new Date(Date.now() - 14*86400000).toISOString().split('T')[0];
+  const recent = state.entries.filter(e => e.date >= cutoff);
+  const counts = {};
+  recent.forEach(e => {
+    if (!counts[e.name]) counts[e.name] = { count: 0, latest: e };
+    counts[e.name].count++;
+    if (e.id > counts[e.name].latest.id) counts[e.name].latest = e;
+  });
+  return Object.values(counts)
+    .sort((a,b) => b.count - a.count)
+    .slice(0, 8)
+    .map(c => c.latest);
+}
+
+// ===== RENDER =====
+function render() {
+  // Date header
+  const d = new Date();
+  const dayName = d.toLocaleDateString('nl-NL', {weekday:'long'});
+  const dayDate = d.toLocaleDateString('nl-NL', {day:'numeric', month:'short'});
+  $('#day').textContent = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+  $('#dayOf').textContent = dayDate;
+  
+  // Goals display
+  const g = state.goals;
+  $('#g-cal').textContent = g.cal;
+  $('#g-pro').textContent = g.pro;
+  $('#g-car').textContent = g.car;
+  $('#g-fat').textContent = g.fat;
+  
+  // Totals
+  const t = todaysTotals();
+  $('#t-cal').textContent = Math.round(t.cal);
+  $('#t-pro').textContent = Math.round(t.pro);
+  $('#t-car').textContent = Math.round(t.car);
+  $('#t-fat').textContent = Math.round(t.fat);
+  
+  // Bars
+  ['cal','pro','car','fat'].forEach(k => {
+    const pct = Math.min((t[k]/g[k])*100, 100);
+    const bar = $('#b-'+k);
+    bar.style.width = pct + '%';
+    bar.classList.remove('over','warn');
+    if (t[k] > g[k]*1.05) bar.classList.add('over');
+    else if (t[k] > g[k]*0.95) bar.classList.add('warn');
+  });
+  
+  // Status text
+  const calPct = Math.round((t.cal/g.cal)*100);
+  $('#totals-status').textContent = calPct + '% van target';
+  
+  // Entries by meal
+  renderEntries();
+}
+
+function renderEntries() {
+  const today = todaysEntries();
+  const list = $('#entries-list');
+  $('#entries-count').textContent = today.length ? `Maaltijden vandaag (${today.length})` : 'Maaltijden';
+  
+  if (!today.length) {
+    list.innerHTML = '<div class="empty">Nog niets vandaag — tap "+ Toevoegen" om te beginnen</div>';
+    return;
+  }
+  
+  // Group by meal
+  const order = ['ontbijt','lunch','diner','snack'];
+  const groups = {};
+  today.forEach(e => {
+    if (!groups[e.meal]) groups[e.meal] = [];
+    groups[e.meal].push(e);
+  });
+  
+  let html = '';
+  order.forEach(m => {
+    if (!groups[m]) return;
+    const mealEmoji = {ontbijt:'🌅',lunch:'☀️',diner:'🌙',snack:'🍎'}[m];
+    const mealLabel = m.charAt(0).toUpperCase()+m.slice(1);
+    const totalCal = groups[m].reduce((s,e) => s+(e.cal||0), 0);
+    html += `<div style="margin:14px 0 6px 4px;font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:0.5px">${mealEmoji} ${mealLabel} · ${Math.round(totalCal)} kcal</div>`;
+    groups[m].sort((a,b) => a.id.localeCompare(b.id)).forEach(e => {
+      html += `
+        <div class="entry" data-id="${e.id}">
+          <div class="e-l">
+            <div class="e-name">${escapeHtml(e.name)}</div>
+            <div class="e-meta">P${Math.round(e.pro||0)} · K${Math.round(e.car||0)} · V${Math.round(e.fat||0)}</div>
+          </div>
+          <div class="e-r">
+            <div class="e-cal tnum">${Math.round(e.cal||0)} kcal</div>
+          </div>
+        </div>
+      `;
+    });
+  });
+  list.innerHTML = html;
+  
+  // Attach click handlers
+  $$('.entry').forEach(el => {
+    el.addEventListener('click', () => openEdit(el.dataset.id));
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+
+// ===== ADD/EDIT MODAL =====
+function openAdd() {
+  editingId = null;
+  $('#modal-title').textContent = '+ Toevoegen';
+  $('#i-delete').style.display = 'none';
+  ['name','cal','pro','car','fat'].forEach(k => $('#i-'+k).value = '');
+  setMeal(currentMeal);
+  
+  // Recent foods chips
+  const recent = getRecentFoods();
+  if (recent.length) {
+    $('#recent-foods-block').style.display = 'block';
+    $('#recent-chips').innerHTML = recent.map(r => 
+      `<span class="chip" data-rid="${r.id}">${escapeHtml(r.name)}</span>`
+    ).join('');
+    $$('#recent-chips .chip').forEach(c => {
+      c.addEventListener('click', () => {
+        const e = state.entries.find(x => x.id === c.dataset.rid);
+        if (e) {
+          $('#i-name').value = e.name;
+          $('#i-cal').value = e.cal;
+          $('#i-pro').value = e.pro || '';
+          $('#i-car').value = e.car || '';
+          $('#i-fat').value = e.fat || '';
+        }
+      });
+    });
+  } else {
+    $('#recent-foods-block').style.display = 'none';
+  }
+  
+  $('#add-modal').classList.add('open');
+  setTimeout(() => $('#i-name').focus(), 50);
+}
+
+function openEdit(id) {
+  const e = state.entries.find(x => x.id === id);
+  if (!e) return;
+  editingId = id;
+  $('#modal-title').textContent = '✏️ Bewerken';
+  $('#i-delete').style.display = 'block';
+  setMeal(e.meal);
+  $('#i-name').value = e.name;
+  $('#i-cal').value = e.cal || '';
+  $('#i-pro').value = e.pro || '';
+  $('#i-car').value = e.car || '';
+  $('#i-fat').value = e.fat || '';
+  $('#recent-foods-block').style.display = 'none';
+  $('#add-modal').classList.add('open');
+}
+
+function closeAdd() {
+  $('#add-modal').classList.remove('open');
+}
+
+function setMeal(meal) {
+  currentMeal = meal;
+  $$('.meal-tab').forEach(t => t.classList.toggle('active', t.dataset.meal === meal));
+}
+
+function saveEntry() {
+  const name = $('#i-name').value.trim();
+  if (!name) { $('#i-name').focus(); return; }
+  
+  const entry = {
+    id: editingId || uid(),
+    date: editingId ? state.entries.find(e => e.id === editingId).date : todayKey(),
+    meal: currentMeal,
+    name,
+    cal: parseFloat($('#i-cal').value) || 0,
+    pro: parseFloat($('#i-pro').value) || 0,
+    car: parseFloat($('#i-car').value) || 0,
+    fat: parseFloat($('#i-fat').value) || 0
+  };
+  
+  if (editingId) {
+    const idx = state.entries.findIndex(e => e.id === editingId);
+    if (idx >= 0) state.entries[idx] = entry;
+  } else {
+    state.entries.push(entry);
+  }
+  saveState();
+  closeAdd();
+  render();
+}
+
+function deleteEntry() {
+  if (!editingId) return;
+  if (!confirm('Verwijderen?')) return;
+  state.entries = state.entries.filter(e => e.id !== editingId);
+  saveState();
+  closeAdd();
+  render();
+}
+
+// ===== SETTINGS MODAL =====
+function openSettings() {
+  $('#g-cal-i').value = state.goals.cal;
+  $('#g-pro-i').value = state.goals.pro;
+  $('#g-car-i').value = state.goals.car;
+  $('#g-fat-i').value = state.goals.fat;
+  $('#set-modal').classList.add('open');
+}
+
+function saveGoals() {
+  state.goals = {
+    cal: parseInt($('#g-cal-i').value) || DEFAULT_GOALS.cal,
+    pro: parseInt($('#g-pro-i').value) || DEFAULT_GOALS.pro,
+    car: parseInt($('#g-car-i').value) || DEFAULT_GOALS.car,
+    fat: parseInt($('#g-fat-i').value) || DEFAULT_GOALS.fat
+  };
+  saveState();
+  $('#set-modal').classList.remove('open');
+  render();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `voeding-backup-${todayKey()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData() {
+  $('#g-import-file').click();
+}
+
+$('#g-import-file').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!data.entries || !data.goals) throw new Error('Invalid');
+      if (!confirm(`Importeer ${data.entries.length} entries? Bestaande data wordt overschreven.`)) return;
+      state = data;
+      saveState();
+      render();
+      $('#set-modal').classList.remove('open');
+    } catch(err) {
+      alert('Bestand niet leesbaar of corrupt');
+    }
+  };
+  reader.readAsText(file);
+});
+
+// ===== EVENTS =====
+$('#add-btn').addEventListener('click', openAdd);
+$('#add-close').addEventListener('click', closeAdd);
+$('#i-save').addEventListener('click', saveEntry);
+$('#i-delete').addEventListener('click', deleteEntry);
+$$('.meal-tab').forEach(t => t.addEventListener('click', () => setMeal(t.dataset.meal)));
+$('#settings-btn').addEventListener('click', openSettings);
+$('#set-close').addEventListener('click', () => $('#set-modal').classList.remove('open'));
+$('#g-save').addEventListener('click', saveGoals);
+$('#g-export').addEventListener('click', exportData);
+$('#g-import').addEventListener('click', importData);
+
+// Close modals on backdrop click
+$('#add-modal').addEventListener('click', e => {
+  if (e.target.id === 'add-modal') closeAdd();
+});
+$('#set-modal').addEventListener('click', e => {
+  if (e.target.id === 'set-modal') $('#set-modal').classList.remove('open');
+});
+
+// Default meal based on time of day
+const hour = new Date().getHours();
+if (hour < 11) currentMeal = 'ontbijt';
+else if (hour < 15) currentMeal = 'lunch';
+else if (hour < 21) currentMeal = 'diner';
+else currentMeal = 'snack';
+
+render();
+
+// Service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

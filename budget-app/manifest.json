@@ -1,7 +1,7 @@
 {
-  "name": "Voeding Tracker",
-  "short_name": "Voeding",
-  "description": "Persoonlijke voeding tracker - macros + calorieën",
+  "name": "Budget Tracker",
+  "short_name": "Budget",
+  "description": "Persoonlijke budget tracker - inkomsten, uitgaven, categorieën",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

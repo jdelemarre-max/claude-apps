@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0e14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Trading">
+<title>Trading Monitor v0</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<style>
+:root{--bg:#0a0e14;--c:#161b24;--c2:#1e2532;--b:rgba(255,255,255,0.08);--t:#e8edf3;--td:#a0aab8;--tf:#6c7689;--a:#60d394;--d:#e76f51;--w:#f4a261;--n:#5fa8d3}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.tnum{font-variant-numeric:tabular-nums}
+.app{max-width:680px;margin:0 auto;padding:16px}
+
+.hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.hd h1{font-size:22px;font-weight:600;letter-spacing:-0.4px}
+.hd .v{font-size:11px;color:var(--tf);margin-top:2px}
+.refresh{font-size:11px;color:var(--td);text-align:right}
+
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:10px 16px;background:var(--c);border:1px solid var(--b);border-radius:10px;color:var(--td);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.tab.active{background:var(--n);color:var(--bg);border-color:var(--n)}
+.tab .ch{font-size:10px;font-weight:500;display:block;margin-top:2px;opacity:0.8}
+.tab.active .ch{opacity:1}
+
+.price-card{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:18px;margin-bottom:14px}
+.pc-tk{font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
+.pc-pr{font-size:38px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.pc-ch{font-size:14px;margin-top:4px;font-variant-numeric:tabular-nums}
+.pc-ch.up{color:var(--a)}.pc-ch.down{color:var(--d)}
+.pc-meta{font-size:11px;color:var(--tf);margin-top:6px}
+
+.advice{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.adv-badge{font-size:11px;font-weight:700;padding:6px 10px;border-radius:6px;letter-spacing:1px}
+.adv-badge.buy{background:var(--a);color:var(--bg)}
+.adv-badge.sell{background:var(--d);color:#fff}
+.adv-badge.hold{background:var(--w);color:var(--bg)}
+.adv-badge.wait{background:var(--c2);color:var(--td)}
+.adv-text{flex:1;font-size:13px;color:var(--t)}
+.adv-conf{font-size:10px;color:var(--tf);margin-top:2px}
+
+.section{margin-bottom:14px}
+.section-h{font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;padding:0 4px}
+
+.tv-chart{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:10px;margin-bottom:14px;height:320px;overflow:hidden;position:relative}
+
+.alerts-list{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto}
+.alert{display:flex;justify-content:space-between;padding:10px 12px;background:var(--c);border:1px solid var(--b);border-radius:8px;font-size:12px}
+.alert.fresh{border-left:3px solid var(--a);background:rgba(96,211,148,0.08)}
+.alert-l{flex:1;min-width:0}
+.alert-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alert-meta{font-size:10px;color:var(--tf);margin-top:2px}
+.alert-r{text-align:right;margin-left:8px}
+.alert-price{font-weight:600;color:var(--a);font-variant-numeric:tabular-nums}
+.alert-time{font-size:10px;color:var(--tf)}
+
+.empty{text-align:center;padding:24px 16px;color:var(--tf);font-size:12px;font-style:italic}
+
+.positions-grid{display:flex;flex-direction:column;gap:6px}
+.pos{display:flex;justify-content:space-between;padding:10px 12px;background:var(--c);border:1px solid var(--b);border-radius:8px;font-size:12px}
+.pos-l{flex:1}
+.pos-n{font-weight:600}
+.pos-m{font-size:10px;color:var(--td);margin-top:2px}
+.pos-r{text-align:right;font-variant-numeric:tabular-nums}
+
+.add-tab{padding:10px 14px;background:var(--c2);border:1px dashed var(--b);border-radius:10px;color:var(--td);font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:flex-end;z-index:20;backdrop-filter:blur(6px)}
+.modal.open{display:flex}
+.modal-c{background:var(--bg);width:100%;max-width:680px;margin:0 auto;border-radius:20px 20px 0 0;padding:20px;border-top:1px solid var(--b)}
+.modal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.modal-h h3{font-size:18px;font-weight:600}
+.close-btn{background:var(--c2);border:none;color:var(--t);width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;color:var(--td);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
+.field input{width:100%;background:var(--c);border:1px solid var(--b);border-radius:10px;padding:14px;color:var(--t);font-size:16px;font-family:inherit;text-transform:uppercase}
+.btn{width:100%;background:var(--a);color:var(--bg);border:none;padding:16px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hd">
+    <div>
+      <h1>📈 Trading Monitor</h1>
+      <div class="v">v0 · multi-ticker · TV-synced</div>
+    </div>
+    <div class="refresh" id="refresh-info">—</div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="price-card">
+    <div class="pc-tk" id="ticker-name">—</div>
+    <div class="pc-pr tnum" id="ticker-price">—</div>
+    <div class="pc-ch tnum" id="ticker-change">—</div>
+    <div class="pc-meta" id="ticker-meta">—</div>
+  </div>
+
+  <div class="advice">
+    <div class="adv-badge wait" id="adv-badge">WAIT</div>
+    <div>
+      <div class="adv-text" id="adv-text">Wachten op data...</div>
+      <div class="adv-conf" id="adv-conf"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-h">📊 Chart (TradingView)</div>
+    <div class="tv-chart" id="tv-chart-container"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-h">🚨 Recente alerts</div>
+    <div id="alerts-list"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-h">📋 Posities (uit Notion)</div>
+    <div id="positions"></div>
+  </div>
+</div>
+
+<div class="modal" id="add-modal">
+  <div class="modal-c">
+    <div class="modal-h">
+      <h3>Ticker handmatig toevoegen</h3>
+      <button class="close-btn" id="add-close">×</button>
+    </div>
+    <p style="font-size:12px;color:var(--td);margin-bottom:14px">Tip: tickers worden automatisch toegevoegd zodra TradingView een alert stuurt voor die ticker. Hier handmatig is alleen voor preview.</p>
+    <div class="field">
+      <label>Ticker symbool</label>
+      <input type="text" id="add-input" placeholder="GLXY" autocapitalize="characters">
+    </div>
+    <button class="btn" id="add-save">Toevoegen</button>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+// State
+let activeTicker = 'ALT'; // default
+let tickers = ['ALT']; // expanded by webhook + manual
+let alerts = [];
+let priceData = {}; // ticker -> data
+let posData = {}; // ticker -> positions
+let tvWidget = null;
+
+// LocalStorage for manually-added tickers
+function loadTickers() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('trading:tickers') || '[]');
+    return ['ALT', ...saved.filter(t => t !== 'ALT')];
+  } catch { return ['ALT']; }
+}
+
+function saveTickers() {
+  const custom = tickers.filter(t => t !== 'ALT');
+  localStorage.setItem('trading:tickers', JSON.stringify(custom));
+}
+
+tickers = loadTickers();
+
+// ===== TICKER MANAGEMENT =====
+function addTicker(t) {
+  t = t.toUpperCase().trim();
+  if (!/^[A-Z][A-Z0-9.-]{0,9}$/.test(t)) { alert('Ongeldige ticker'); return; }
+  if (!tickers.includes(t)) {
+    tickers.push(t);
+    saveTickers();
+    renderTabs();
+    setActive(t);
+  }
+}
+
+function setActive(t) {
+  activeTicker = t;
+  renderTabs();
+  loadAll();
+}
+
+function renderTabs() {
+  const html = tickers.map(t => {
+    const p = priceData[t];
+    const ch = p ? `<span class="ch ${p.change>=0?'up':'down'}">${p.change>=0?'+':''}${p.changePercent.toFixed(1)}%</span>` : '';
+    return `<button class="tab ${t===activeTicker?'active':''}" data-tk="${t}">${t}${ch}</button>`;
+  }).join('') + '<button class="add-tab" id="add-tab-btn">+ Ticker</button>';
+  $('#tabs').innerHTML = html;
+  $$('.tab').forEach(b => b.addEventListener('click', () => setActive(b.dataset.tk)));
+  $('#add-tab-btn').addEventListener('click', () => $('#add-modal').classList.add('open'));
+}
+
+// ===== DATA LOADERS =====
+async function loadPrice(ticker) {
+  try {
+    const r = await fetch(`/api/price?ticker=${ticker}`, { cache: 'no-store' });
+    if (!r.ok) throw new Error('price ' + r.status);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    priceData[ticker] = d;
+    return d;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function loadAlerts() {
+  try {
+    const r = await fetch('/api/alerts', { cache: 'no-store' });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    alerts = d.alerts || [];
+    // Auto-add tickers from alerts
+    if (d.tickers) {
+      d.tickers.forEach(t => {
+        if (!tickers.includes(t)) {
+          tickers.push(t);
+          saveTickers();
+        }
+      });
+    }
+    return alerts;
+  } catch { return []; }
+}
+
+async function loadPositions(ticker) {
+  try {
+    const r = await fetch(`/api/data?type=positions&ticker=${ticker}`, { cache: 'no-store' });
+    const d = await r.json();
+    posData[ticker] = d.data || [];
+    return posData[ticker];
+  } catch { return []; }
+}
+
+// ===== TOP-TRADER ENGINE (simpel, rule-based) =====
+function computeAdvice(ticker, price, alerts, positions) {
+  if (!price) return { label: 'WAIT', text: 'Wachten op live prijsdata', confidence: 0 };
+  
+  const recentAlerts = alerts.filter(a => a.ticker === ticker && Date.now() - new Date(a.received_at).getTime() < 24*3600000);
+  const hasPositions = positions && positions.length > 0;
+  const moveUp = price.changePercent > 5;
+  const moveDown = price.changePercent < -5;
+  
+  // Rule 1: recent SELL alert + price drop = act now
+  if (recentAlerts.some(a => /sell|verkoop|trim|exit/i.test(a.alert_name)) && moveDown) {
+    return { label: 'SELL', text: `Recente sell-alert + ${price.changePercent.toFixed(1)}% daling. Trigger conditie geraakt.`, confidence: 80 };
+  }
+  
+  // Rule 2: recent BUY alert + price up = ride momentum
+  if (recentAlerts.some(a => /buy|koop|entry/i.test(a.alert_name)) && moveUp) {
+    return { label: 'BUY', text: `Buy-alert getriggered + ${price.changePercent.toFixed(1)}% momentum.`, confidence: 70 };
+  }
+  
+  // Rule 3: big up move zonder alert = take profits if positions
+  if (moveUp && hasPositions) {
+    return { label: 'HOLD', text: `+${price.changePercent.toFixed(1)}% rally. Geen sell-alert getriggered, posities aanhouden.`, confidence: 60 };
+  }
+  
+  // Rule 4: big down without buy alert = wait
+  if (moveDown) {
+    return { label: 'WAIT', text: `${price.changePercent.toFixed(1)}% daling. Geen entry-trigger, wacht op stabilisatie.`, confidence: 50 };
+  }
+  
+  // Default: hold met posities, wait zonder
+  if (hasPositions) {
+    return { label: 'HOLD', text: `Stabiele beweging. Posities aanhouden, wacht op alert-trigger.`, confidence: 60 };
+  }
+  return { label: 'WAIT', text: 'Geen actieve positie of trigger.', confidence: 50 };
+}
+
+// ===== RENDER =====
+function renderPrice() {
+  const p = priceData[activeTicker];
+  $('#ticker-name').textContent = activeTicker;
+  if (!p) {
+    $('#ticker-price').textContent = '—';
+    $('#ticker-change').textContent = 'Geen data';
+    $('#ticker-meta').textContent = '';
+    return;
+  }
+  $('#ticker-price').textContent = `$${p.price.toFixed(2)}`;
+  const sign = p.change >= 0 ? '+' : '';
+  $('#ticker-change').textContent = `${sign}${p.change.toFixed(2)} (${sign}${p.changePercent.toFixed(2)}%)`;
+  $('#ticker-change').className = 'pc-ch tnum ' + (p.change >= 0 ? 'up' : 'down');
+  $('#ticker-meta').textContent = `${p.marketState || ''} · ${new Date(p.timestamp).toLocaleTimeString('nl-NL')}`;
+}
+
+function renderAdvice() {
+  const a = computeAdvice(activeTicker, priceData[activeTicker], alerts, posData[activeTicker]);
+  $('#adv-badge').textContent = a.label;
+  $('#adv-badge').className = 'adv-badge ' + a.label.toLowerCase();
+  $('#adv-text').textContent = a.text;
+  $('#adv-conf').textContent = `Confidence: ${a.confidence}% (rule-based v0)`;
+}
+
+function renderAlerts() {
+  const tickerAlerts = alerts.filter(a => a.ticker === activeTicker);
+  const list = $('#alerts-list');
+  if (!tickerAlerts.length) {
+    list.innerHTML = `<div class="empty">Geen alerts voor ${activeTicker}. Setup TV-webhook om alerts te ontvangen.</div>`;
+    return;
+  }
+  const now = Date.now();
+  const html = tickerAlerts.slice(0, 10).map(a => {
+    const ageMin = Math.round((now - new Date(a.received_at).getTime()) / 60000);
+    const fresh = ageMin < 60 ? 'fresh' : '';
+    let timeLabel = ageMin < 1 ? 'net nu' : ageMin < 60 ? `${ageMin}m` : ageMin < 1440 ? `${Math.round(ageMin/60)}u` : new Date(a.received_at).toLocaleDateString('nl-NL', {day:'numeric', month:'short'});
+    return `<div class="alert ${fresh}">
+      <div class="alert-l">
+        <div class="alert-name">${escapeHtml(a.alert_name)}</div>
+        <div class="alert-meta">${a.ticker}</div>
+      </div>
+      <div class="alert-r">
+        <div class="alert-price">$${a.price.toFixed(2)}</div>
+        <div class="alert-time">${timeLabel}</div>
+      </div>
+    </div>`;
+  }).join('');
+  list.innerHTML = `<div class="alerts-list">${html}</div>`;
+}
+
+function renderPositions() {
+  const positions = posData[activeTicker] || [];
+  const list = $('#positions');
+  if (!positions.length) {
+    list.innerHTML = `<div class="empty">Geen posities geconfigureerd voor ${activeTicker}.<br>Voeg toe in Notion → Stock Positions database (Ticker = ${activeTicker}).</div>`;
+    return;
+  }
+  const html = positions.map(p => `
+    <div class="pos">
+      <div class="pos-l">
+        <div class="pos-n">${escapeHtml(p.Type || p.Naam || 'Position')}</div>
+        <div class="pos-m">Qty: ${p.Qty || '-'} · Cost: $${p.CostBasis || '-'}</div>
+      </div>
+      <div class="pos-r">${p.Account || ''}</div>
+    </div>
+  `).join('');
+  list.innerHTML = `<div class="positions-grid">${html}</div>`;
+}
+
+function renderTVChart() {
+  const container = $('#tv-chart-container');
+  container.innerHTML = `<div id="tv-${activeTicker}" style="height:100%"></div>`;
+  if (window.TradingView) {
+    new TradingView.widget({
+      autosize: true,
+      symbol: `NASDAQ:${activeTicker}`,
+      interval: 'D',
+      theme: 'dark',
+      style: '1',
+      locale: 'nl',
+      enable_publishing: false,
+      allow_symbol_change: false,
+      container_id: `tv-${activeTicker}`,
+      hide_side_toolbar: true,
+      hide_top_toolbar: false,
+      backgroundColor: '#161b24',
+      gridColor: 'rgba(255,255,255,0.03)'
+    });
+  } else {
+    container.innerHTML = '<div class="empty">TradingView script nog niet geladen</div>';
+  }
+}
+
+function escapeHtml(s) {
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+
+// ===== ORCHESTRATION =====
+async function loadAll() {
+  $('#refresh-info').textContent = 'Laden...';
+  await Promise.all([
+    loadPrice(activeTicker),
+    loadAlerts(),
+    loadPositions(activeTicker)
+  ]);
+  // Also fetch prices for OTHER tabs in background (for tab indicator)
+  tickers.filter(t => t !== activeTicker).forEach(t => {
+    if (!priceData[t]) loadPrice(t).then(() => renderTabs());
+  });
+  renderPrice();
+  renderAdvice();
+  renderAlerts();
+  renderPositions();
+  renderTVChart();
+  renderTabs();
+  $('#refresh-info').textContent = `Bijgewerkt ${new Date().toLocaleTimeString('nl-NL')}`;
+}
+
+// ===== EVENTS =====
+$('#add-close').addEventListener('click', () => $('#add-modal').classList.remove('open'));
+$('#add-modal').addEventListener('click', e => { if (e.target.id === 'add-modal') $('#add-modal').classList.remove('open'); });
+$('#add-save').addEventListener('click', () => {
+  const t = $('#add-input').value;
+  if (t) {
+    addTicker(t);
+    $('#add-input').value = '';
+    $('#add-modal').classList.remove('open');
+  }
+});
+
+// Auto-refresh every 60s
+setInterval(loadAll, 60000);
+
+// Initial load NU (niet wachten op TV script)
+loadAll();
+
+// Load TV widget script (best effort)
+const tvScript = document.createElement('script');
+tvScript.src = 'https://s3.tradingview.com/tv.js';
+tvScript.onload = () => renderTVChart(); // re-render chart with widget when ready
+tvScript.onerror = () => {};
+document.head.appendChild(tvScript);
+
+// Service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js').catch(() => {}));
+}
+</script>
+</body>
+</html>

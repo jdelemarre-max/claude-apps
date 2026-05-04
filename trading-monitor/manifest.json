@@ -1,7 +1,7 @@
 {
-  "name": "Voeding Tracker",
-  "short_name": "Voeding",
-  "description": "Persoonlijke voeding tracker - macros + calorieën",
+  "name": "Trading Monitor",
+  "short_name": "Trading",
+  "description": "Multi-ticker trading dashboard met TV-sync",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
