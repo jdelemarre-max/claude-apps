@@ -94,6 +94,16 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-a
 
 .settings-link{font-size:11px;color:var(--n);text-decoration:none;cursor:pointer}
 
+
+.scan-btn{width:100%;background:linear-gradient(135deg,#5fa8d3 0%,#60d394 100%);color:#0a0e14;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}
+.scan-btn:disabled{opacity:0.6;cursor:wait}
+.scan-btn .spin{display:inline-block;width:16px;height:16px;border:2px solid #0a0e14;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scan-msg{font-size:12px;text-align:center;padding:8px;border-radius:8px;margin-bottom:12px;display:none}
+.scan-msg.error{background:rgba(231,111,81,0.15);color:var(--d);display:block}
+.scan-msg.success{background:rgba(96,211,148,0.15);color:var(--a);display:block}
+#scan-input{display:none}
+
 @media(max-width:380px){.s-val{font-size:16px}.cat-grid{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -144,6 +154,13 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-a
       <h3 id="modal-title">Toevoegen</h3>
       <button class="close-btn" id="add-close">×</button>
     </div>
+
+    <button class="scan-btn" id="scan-btn" type="button">
+      <span id="scan-icon">📷</span>
+      <span id="scan-text">Scan bonnetje</span>
+    </button>
+    <input type="file" id="scan-input" accept="image/*" capture="environment">
+    <div class="scan-msg" id="scan-msg"></div>
 
     <div class="type-tabs">
       <button class="type-tab expense active" data-type="expense">- Uitgave</button>
@@ -586,6 +603,102 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js').catch(() => {});
   });
 }
+
+// ===== RECEIPT SCAN =====
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function compressImage(dataUrl, maxDim = 1600, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim/width, maxDim/height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
+function showScanMsg(text, kind='error') {
+  const el = $('#scan-msg');
+  el.className = 'scan-msg ' + kind;
+  el.textContent = text;
+  setTimeout(() => { el.className = 'scan-msg'; }, 6000);
+}
+
+function setScanLoading(loading) {
+  const btn = $('#scan-btn');
+  btn.disabled = loading;
+  $('#scan-icon').innerHTML = loading ? '<span class="spin"></span>' : '📷';
+  $('#scan-text').textContent = loading ? 'Bonnetje analyseren...' : 'Scan bonnetje';
+}
+
+$('#scan-btn').addEventListener('click', () => $('#scan-input').click());
+
+$('#scan-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = ''; // reset zodat zelfde file opnieuw kan
+
+  setScanLoading(true);
+  try {
+    const original = await fileToDataURL(file);
+    const compressed = await compressImage(original);
+
+    const resp = await fetch('/.netlify/functions/scan-receipt', {
+      method: 'POST',
+      headers: {'content-type':'application/json'},
+      body: JSON.stringify({ image: compressed })
+    });
+
+    const data = await resp.json();
+    if (!resp.ok || data.error) {
+      showScanMsg(data.error || 'Scan mislukt — vul handmatig in', 'error');
+      setScanLoading(false);
+      return;
+    }
+
+    // Pre-fill formulier
+    currentType = 'expense';
+    $$('.type-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.type === 'expense');
+    });
+    renderCategoryGrid();
+
+    if (data.amount) $('#i-amt').value = data.amount.toFixed(2);
+    if (data.vendor) $('#i-desc').value = data.vendor;
+    if (data.date) $('#i-date').value = data.date;
+    if (data.categoryId) {
+      currentCat = data.categoryId;
+      $$('.cat-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.id === data.categoryId);
+      });
+    }
+
+    showScanMsg(`✓ ${data.vendor || 'Bon'} — €${data.amount?.toFixed(2) || '?'} — controleer en sla op`, 'success');
+  } catch(err) {
+    showScanMsg('Fout: ' + err.message, 'error');
+  }
+  setScanLoading(false);
+});
+
 </script>
 </body>
 </html>
