@@ -102,7 +102,7 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-a
 .scan-msg{font-size:12px;text-align:center;padding:8px;border-radius:8px;margin-bottom:12px;display:none}
 .scan-msg.error{background:rgba(231,111,81,0.15);color:var(--d);display:block}
 .scan-msg.success{background:rgba(96,211,148,0.15);color:var(--a);display:block}
-#scan-input{display:none}
+#scan-input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
 
 @media(max-width:380px){.s-val{font-size:16px}.cat-grid{grid-template-columns:repeat(3,1fr)}}
 </style>
@@ -155,10 +155,10 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-a
       <button class="close-btn" id="add-close">×</button>
     </div>
 
-    <button class="scan-btn" id="scan-btn" type="button">
+    <label class="scan-btn" id="scan-btn" for="scan-input">
       <span id="scan-icon">📷</span>
       <span id="scan-text">Scan bonnetje</span>
-    </button>
+    </label>
     <input type="file" id="scan-input" accept="image/*" capture="environment">
     <div class="scan-msg" id="scan-msg"></div>
 
@@ -649,8 +649,6 @@ function setScanLoading(loading) {
   $('#scan-icon').innerHTML = loading ? '<span class="spin"></span>' : '📷';
   $('#scan-text').textContent = loading ? 'Bonnetje analyseren...' : 'Scan bonnetje';
 }
-
-$('#scan-btn').addEventListener('click', () => $('#scan-input').click());
 
 $('#scan-input').addEventListener('change', async (e) => {
   const file = e.target.files[0];
