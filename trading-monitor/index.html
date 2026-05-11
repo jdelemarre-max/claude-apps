@@ -1,429 +1,1082 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0a0e14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Trading">
-<title>Trading Monitor v0</title>
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-title" content="ALT Monitor">
+<meta name="theme-color" content="#0a0e14">
+<title>ALT Monitor v9</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230a0e14'/%3E%3Ctext x='50' y='68' font-size='50' font-weight='600' text-anchor='middle' fill='%2360d394' font-family='system-ui'%3EA%3C/text%3E%3C/svg%3E">
 <style>
-:root{--bg:#0a0e14;--c:#161b24;--c2:#1e2532;--b:rgba(255,255,255,0.08);--t:#e8edf3;--td:#a0aab8;--tf:#6c7689;--a:#60d394;--d:#e76f51;--w:#f4a261;--n:#5fa8d3}
+:root{--bg:#0a0e14;--c:#141821;--c2:#1a1f2a;--cm:#0f131a;--b:#222831;--bs:#2d3441;--t:#e8eaed;--td:#8b93a7;--tf:#5a6175;--a:#60d394;--w:#f4a261;--d:#e76f51;--n:#6b8afd}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
-body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+html,body{background:var(--bg);color:var(--t);font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+.app{max-width:960px;margin:0 auto;padding:16px;padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom))}
+button{cursor:pointer;font-family:inherit}
+h1,h2,h3{font-weight:600;letter-spacing:-0.2px}
 .tnum{font-variant-numeric:tabular-nums}
-.app{max-width:680px;margin:0 auto;padding:16px}
+.profit{color:var(--a)}
+.loss{color:var(--d)}
+.muted{color:var(--td)}
+.faint{color:var(--tf)}
 
-.hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
-.hd h1{font-size:22px;font-weight:600;letter-spacing:-0.4px}
-.hd .v{font-size:11px;color:var(--tf);margin-top:2px}
-.refresh{font-size:11px;color:var(--td);text-align:right}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--b)}
+.hd .logo{font-size:10px;font-weight:600;letter-spacing:2px;color:var(--a);text-transform:uppercase;margin-bottom:4px}
+.hd h1{font-size:19px}
+.hd-right{text-align:right}
+.pb{display:inline-flex;align-items:baseline;gap:8px;background:var(--c);border:1px solid var(--bs);border-radius:10px;padding:6px 12px}
+.pb span:first-child{font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--tf);text-transform:uppercase}
+.pb span:last-child{font-size:17px;font-weight:600}
+.date-s{font-size:11px;color:var(--tf);margin-top:4px}
 
-.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
-.tabs::-webkit-scrollbar{display:none}
-.tab{flex-shrink:0;padding:10px 16px;background:var(--c);border:1px solid var(--b);border-radius:10px;color:var(--td);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
-.tab.active{background:var(--n);color:var(--bg);border-color:var(--n)}
-.tab .ch{font-size:10px;font-weight:500;display:block;margin-top:2px;opacity:0.8}
-.tab.active .ch{opacity:1}
+.sh{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px}
+.sh h2{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--td)}
+.sh .tag{font-size:10px;color:var(--tf);letter-spacing:0.5px}
 
-.price-card{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:18px;margin-bottom:14px}
-.pc-tk{font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
-.pc-pr{font-size:38px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-1px}
-.pc-ch{font-size:14px;margin-top:4px;font-variant-numeric:tabular-nums}
-.pc-ch.up{color:var(--a)}.pc-ch.down{color:var(--d)}
-.pc-meta{font-size:11px;color:var(--tf);margin-top:6px}
+.cta{background:linear-gradient(135deg,rgba(96,211,148,0.12),rgba(96,211,148,0.04));border:1px solid var(--a);border-radius:12px;padding:13px 15px;margin-bottom:8px;position:relative}
+.cta:last-child{margin-bottom:16px}
+.cta.warn{background:linear-gradient(135deg,rgba(244,162,97,0.12),rgba(244,162,97,0.04));border-color:var(--w)}
+.cta.alert{background:linear-gradient(135deg,rgba(231,111,81,0.12),rgba(231,111,81,0.04));border-color:var(--d)}
+.cta.info{background:linear-gradient(135deg,rgba(107,138,253,0.1),rgba(107,138,253,0.04));border-color:var(--n)}
+.cta-lbl{font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--a);text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.cta.warn .cta-lbl{color:var(--w)}
+.cta.alert .cta-lbl{color:var(--d)}
+.cta.info .cta-lbl{color:var(--n)}
+.cta-dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.cta-title{font-size:14px;font-weight:600;margin-bottom:3px}
+.cta-body{font-size:12px;color:var(--td);line-height:1.5}
+.cta-body strong{color:var(--t);font-weight:600}
 
-.advice{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
-.adv-badge{font-size:11px;font-weight:700;padding:6px 10px;border-radius:6px;letter-spacing:1px}
-.adv-badge.buy{background:var(--a);color:var(--bg)}
-.adv-badge.sell{background:var(--d);color:#fff}
-.adv-badge.hold{background:var(--w);color:var(--bg)}
-.adv-badge.wait{background:var(--c2);color:var(--td)}
-.adv-text{flex:1;font-size:13px;color:var(--t)}
-.adv-conf{font-size:10px;color:var(--tf);margin-top:2px}
+/* Big portfolio summary */
+.psum{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.psum-g{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:600px){.psum-g{grid-template-columns:repeat(2,1fr)}}
+.psum-i{text-align:left}
+.psum-l{font-size:9px;color:var(--td);font-weight:600;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:3px}
+.psum-v{font-size:16px;font-weight:600}
+.psum-s{font-size:10px;color:var(--tf);margin-top:2px}
 
-.section{margin-bottom:14px}
-.section-h{font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;padding:0 4px}
+.snap-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+@media(max-width:600px){.snap-grid{grid-template-columns:repeat(2,1fr)}}
+.snap{background:var(--c);border:1px solid var(--b);border-radius:12px;padding:11px;cursor:pointer;transition:all 0.15s;position:relative}
+.snap:hover{border-color:var(--bs)}
+.snap.active{border-color:var(--a);background:var(--c2)}
+.snap-label{font-size:10px;color:var(--td);font-weight:600;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:3px}
+.snap-price{font-size:15px;font-weight:600;margin-bottom:5px}
+.snap-pl{font-size:16px;font-weight:600;letter-spacing:-0.3px}
+.snap-sub{font-size:10px;color:var(--tf);margin-top:2px}
+.snap-badge{position:absolute;top:6px;right:6px;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:var(--c2);color:var(--tf);letter-spacing:0.5px;text-transform:uppercase}
 
-.tv-chart{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:10px;margin-bottom:14px;height:320px;overflow:hidden;position:relative}
+.cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.cat{background:var(--c);border:1px solid var(--b);border-radius:10px;padding:11px;position:relative;overflow:hidden}
+.cat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--n)}
+.cat.soon::before{background:var(--a)}
+.cat.crit::before{background:var(--w)}
+.cat-lbl{font-size:10px;color:var(--td);font-weight:500;margin-bottom:3px}
+.cat-d{font-size:22px;font-weight:600;line-height:1}
+.cat-u{font-size:10px;color:var(--tf);font-weight:500;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.cat-dt{font-size:10px;color:var(--tf);margin-top:5px}
+.cat-detail{font-size:10px;color:var(--td);margin-top:6px;padding-top:6px;border-top:1px solid var(--b);line-height:1.4}
 
-.alerts-list{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto}
-.alert{display:flex;justify-content:space-between;padding:10px 12px;background:var(--c);border:1px solid var(--b);border-radius:8px;font-size:12px}
-.alert.fresh{border-left:3px solid var(--a);background:rgba(96,211,148,0.08)}
-.alert-l{flex:1;min-width:0}
-.alert-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.alert-meta{font-size:10px;color:var(--tf);margin-top:2px}
-.alert-r{text-align:right;margin-left:8px}
-.alert-price{font-weight:600;color:var(--a);font-variant-numeric:tabular-nums}
-.alert-time{font-size:10px;color:var(--tf)}
+.sim{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:16px}
+.sim-row{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.sim-row label{font-size:12px;color:var(--td);font-weight:500;min-width:70px}
+.sim-val{font-size:20px;font-weight:600;min-width:62px;text-align:right;color:var(--a)}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:4px;background:var(--bs);border-radius:999px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:var(--a);border-radius:50%;cursor:pointer;border:3px solid var(--bg);box-shadow:0 0 0 1px var(--a)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;background:var(--a);border-radius:50%;cursor:pointer;border:3px solid var(--bg);box-shadow:0 0 0 1px var(--a)}
+.tabs{display:flex;gap:4px;background:var(--c2);padding:4px;border-radius:10px;margin-bottom:12px;border:1px solid var(--b)}
+.tab{flex:1;background:transparent;border:none;color:var(--td);font-size:11px;font-weight:600;letter-spacing:0.5px;padding:7px 4px;border-radius:7px;text-transform:uppercase;transition:all 0.15s}
+.tab.active{background:var(--bs);color:var(--t)}
 
-.empty{text-align:center;padding:24px 16px;color:var(--tf);font-size:12px;font-style:italic}
+.plg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:500px){.plg{grid-template-columns:1fr 1fr}.plg .total{grid-column:1/-1}}
+.plc{background:var(--c2);border:1px solid var(--b);border-radius:10px;padding:10px 12px}
+.plc.total{border-color:var(--bs)}
+.plc-l{font-size:10px;color:var(--td);font-weight:600;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:4px}
+.plc-v{font-size:17px;font-weight:600;letter-spacing:-0.3px}
+.plc.total .plc-v{font-size:20px}
 
-.positions-grid{display:flex;flex-direction:column;gap:6px}
-.pos{display:flex;justify-content:space-between;padding:10px 12px;background:var(--c);border:1px solid var(--b);border-radius:8px;font-size:12px}
-.pos-l{flex:1}
-.pos-n{font-weight:600}
-.pos-m{font-size:10px;color:var(--td);margin-top:2px}
-.pos-r{text-align:right;font-variant-numeric:tabular-nums}
+.pos{background:var(--c);border:1px solid var(--b);border-radius:14px;overflow:hidden}
+.pr{display:grid;grid-template-columns:78px 48px 42px 70px 1fr 1fr 16px;padding:11px 14px;border-bottom:1px solid var(--b);align-items:center;font-size:13px;gap:6px;cursor:pointer;transition:background 0.15s}
+.pr:hover:not(.hdr){background:var(--c2)}
+.pr:last-child{border-bottom:none}
+.pr.hdr{background:var(--c2);font-size:10px;color:var(--tf);font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:default}
+.pr-e{font-weight:600;font-size:12px}
+.pr-s,.pr-q{color:var(--td)}
+.pr-q{text-align:right}
+.pr-now{font-weight:600;text-align:right;font-size:12px}
+.pr-exp{font-weight:600;text-align:right}
+.pr-a{color:var(--tf);font-size:16px;text-align:center}
+@media(max-width:500px){.pr{grid-template-columns:58px 36px 36px 58px 1fr 14px;font-size:11px;padding:10px 8px;gap:5px}.pr-e{font-size:10px}.pr-now{font-size:11px}.pr-exp{display:none}.pr.hdr .pr-exp{display:none}}
 
-.add-tab{padding:10px 14px;background:var(--c2);border:1px dashed var(--b);border-radius:10px;color:var(--td);font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.sos{display:grid;gap:8px}
+.so{background:var(--c);border:1px solid var(--b);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:11px;transition:all 0.2s}
+.so.hit{border-color:var(--a);background:linear-gradient(90deg,rgba(96,211,148,0.08),var(--c))}
+.so-dot{width:9px;height:9px;border-radius:50%;background:var(--bs);flex-shrink:0}
+.so.hit .so-dot{background:var(--a);box-shadow:0 0 0 4px rgba(96,211,148,0.15)}
+.so-c{flex:1}
+.so-t{font-size:13px;font-weight:600;margin-bottom:1px}
+.so-r{font-size:11px;color:var(--td)}
+.so-v{font-size:12px;font-weight:600;color:var(--tf);text-align:right}
+.so.hit .so-v{color:var(--a)}
 
-.modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:flex-end;z-index:20;backdrop-filter:blur(6px)}
-.modal.open{display:flex}
-.modal-c{background:var(--bg);width:100%;max-width:680px;margin:0 auto;border-radius:20px 20px 0 0;padding:20px;border-top:1px solid var(--b)}
-.modal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.modal-h h3{font-size:18px;font-weight:600}
-.close-btn{background:var(--c2);border:none;color:var(--t);width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer}
-.field{margin-bottom:14px}
-.field label{display:block;font-size:11px;color:var(--td);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
-.field input{width:100%;background:var(--c);border:1px solid var(--b);border-radius:10px;padding:14px;color:var(--t);font-size:16px;font-family:inherit;text-transform:uppercase}
-.btn{width:100%;background:var(--a);color:var(--bg);border:none;padding:16px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer}
+.scn{display:grid;gap:6px}
+.sc{display:grid;grid-template-columns:40px 1fr 54px 40px 78px;gap:8px;align-items:center;background:var(--c);border:1px solid var(--b);border-radius:10px;padding:10px 12px;font-size:12px}
+.sc-p{font-size:13px;font-weight:600;color:var(--a)}
+.sc-d{line-height:1.3;font-size:12px}
+.sc-t{font-size:10px;color:var(--td);text-align:right;font-weight:500}
+.sc-w{font-size:10px;color:var(--tf);text-align:center;background:var(--c2);padding:2px 5px;border-radius:4px;letter-spacing:0.3px;text-transform:uppercase;font-weight:500}
+.sc-ev{font-size:12px;font-weight:600;text-align:right}
+@media(max-width:500px){.sc{grid-template-columns:34px 1fr 46px 34px 66px;padding:9px 10px;font-size:11px;gap:6px}.sc-p{font-size:12px}}
+
+.notes{background:var(--c);border:1px solid var(--b);border-radius:12px;padding:9px 13px;margin-bottom:12px}
+.notes textarea{background:transparent;border:none;color:var(--t);width:100%;font:13px/1.5 inherit;resize:vertical;outline:none;min-height:36px}
+.notes textarea::placeholder{color:var(--tf)}
+
+.mbd{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;display:none;opacity:0;transition:opacity 0.2s}
+.mbd.on{display:block;opacity:1}
+.m{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(0.95);width:calc(100% - 32px);max-width:560px;max-height:90vh;background:var(--cm);border:1px solid var(--bs);border-radius:18px;z-index:101;display:none;flex-direction:column;opacity:0;transition:opacity 0.2s,transform 0.2s;overflow:hidden}
+.m.on{display:flex;opacity:1;transform:translate(-50%,-50%) scale(1)}
+@media(max-width:500px){.m{width:100%;max-width:100%;height:92vh;max-height:92vh;top:auto;bottom:0;left:0;transform:translateY(100%);border-radius:18px 18px 0 0}.m.on{transform:translateY(0)}}
+.mh{padding:16px 18px;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0}
+.mh h3{font-size:17px;margin-bottom:3px}
+.mh-sub{font-size:11px;color:var(--td)}
+.mc{background:var(--c2);border:none;color:var(--td);width:30px;height:30px;border-radius:50%;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mc:hover{background:var(--bs);color:var(--t)}
+.mt-row{display:flex;gap:3px;background:var(--bg);padding:8px 14px 0;border-bottom:1px solid var(--b);flex-shrink:0;overflow-x:auto}
+.mt{background:transparent;border:none;color:var(--td);font-size:11px;font-weight:600;letter-spacing:0.5px;padding:9px 12px;border-bottom:2px solid transparent;margin-bottom:-1px;text-transform:uppercase;white-space:nowrap;transition:all 0.15s}
+.mt.active{color:var(--a);border-bottom-color:var(--a)}
+.mct{flex:1;overflow-y:auto;padding:18px}
+.mp{display:none}
+.mp.active{display:block}
+
+.ir{display:flex;align-items:center;gap:10px;margin-bottom:12px;background:var(--c);border:1px solid var(--b);border-radius:10px;padding:9px 13px}
+.ir label{font-size:12px;color:var(--td);font-weight:500;min-width:120px}
+.ir input{flex:1;background:transparent;border:none;color:var(--t);font:14px/1 inherit;font-variant-numeric:tabular-nums;text-align:right;outline:none;font-weight:500}
+.ir input::-webkit-inner-spin-button{-webkit-appearance:none}
+.ir .u{color:var(--tf);font-size:13px}
+
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.sb{background:var(--c);border:1px solid var(--b);border-radius:10px;padding:10px 12px}
+.sb-l{font-size:9px;color:var(--td);font-weight:600;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:3px}
+.sb-v{font-size:15px;font-weight:600}
+.sb-v.lg{font-size:19px}
+
+.tbl{background:var(--c);border:1px solid var(--b);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.tr{display:grid;grid-template-columns:54px 1fr 1fr 1fr;padding:9px 13px;gap:10px;border-bottom:1px solid var(--b);font-size:13px;align-items:center}
+.tr:last-child{border-bottom:none}
+.tr.h{background:var(--c2);font-size:10px;color:var(--tf);font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.tr .p{font-weight:600;color:var(--a)}
+.tr .v{color:var(--t)}
+.tr .m-{color:var(--td)}
+.tr .pl{font-weight:600;text-align:right}
+
+.tig{background:var(--c);border:1px solid var(--bs);border-radius:12px;padding:10px 12px;margin-bottom:14px}
+.tig-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.tig-l{font-size:10px;color:var(--td);font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.tig-v{font-size:17px;font-weight:600;color:var(--a)}
+.pills{display:flex;gap:5px;flex-wrap:wrap}
+.pill{background:var(--c2);border:1px solid var(--b);color:var(--td);font:11px/1 inherit;font-weight:500;padding:6px 11px;border-radius:999px;transition:all 0.15s}
+.pill:hover{border-color:var(--bs);color:var(--t)}
+.pill.active{background:var(--a);color:#0a0e14;border-color:var(--a)}
+
+.rc{background:var(--c);border:1px solid var(--b);border-radius:10px;padding:12px;margin-bottom:8px}
+.rc-h{font-size:13px;font-weight:600;margin-bottom:3px;display:flex;justify-content:space-between;gap:8px}
+.rc-tag{font-size:9px;color:var(--tf);background:var(--c2);padding:2px 7px;border-radius:4px;letter-spacing:0.5px;text-transform:uppercase;font-weight:500;flex-shrink:0}
+.rc-d{font-size:11px;color:var(--td);margin-bottom:8px;line-height:1.4}
+.rc-s{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.rc-stat{background:var(--c2);border-radius:7px;padding:7px 9px}
+.rc-stat-l{font-size:9px;color:var(--tf);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.rc-stat-v{font-size:12px;font-weight:600}
+
+.rec{background:linear-gradient(135deg,rgba(96,211,148,0.12),rgba(96,211,148,0.04));border:1px solid var(--a);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.rec.w{background:linear-gradient(135deg,rgba(244,162,97,0.12),rgba(244,162,97,0.04));border-color:var(--w)}
+.rec-l{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;color:var(--a)}
+.rec.w .rec-l{color:var(--w)}
+.rec-t{font-size:13px;font-weight:500;line-height:1.5}
+.rec-t strong{color:var(--a);font-weight:600}
+.rec.w .rec-t strong{color:var(--w)}
+
+.tip{background:rgba(107,138,253,0.08);border:1px solid rgba(107,138,253,0.3);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--td);line-height:1.5;margin-bottom:12px}
+.tip strong{color:var(--n)}
+.tip.warn{background:rgba(244,162,97,0.08);border-color:rgba(244,162,97,0.3)}
+.tip.warn strong{color:var(--w)}
+
+@media(min-width:900px){.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}.grid2>*{margin:0!important}}
+
+.ft{margin-top:22px;padding-top:14px;border-top:1px solid var(--b);font-size:10px;color:var(--tf);text-align:center;line-height:1.6}
+.ft strong{color:var(--td)}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="hd">
-    <div>
-      <h1>📈 Trading Monitor</h1>
-      <div class="v">v0 · multi-ticker · TV-synced</div>
-    </div>
-    <div class="refresh" id="refresh-info">—</div>
+
+<header class="hd">
+  <div>
+    <div class="logo">Altimmune · Pemvidutide</div>
+    <h1>ALT Catalyst Monitor</h1>
   </div>
-
-  <div class="tabs" id="tabs"></div>
-
-  <div class="price-card">
-    <div class="pc-tk" id="ticker-name">—</div>
-    <div class="pc-pr tnum" id="ticker-price">—</div>
-    <div class="pc-ch tnum" id="ticker-change">—</div>
-    <div class="pc-meta" id="ticker-meta">—</div>
+  <div class="hd-right">
+    <div class="pb"><span>ALT nu</span><span id="bp">$3.09</span></div>
+    <div class="date-s" id="td">1 mei 2026</div>
   </div>
+</header>
 
-  <div class="advice">
-    <div class="adv-badge wait" id="adv-badge">WAIT</div>
-    <div>
-      <div class="adv-text" id="adv-text">Wachten op data...</div>
-      <div class="adv-conf" id="adv-conf"></div>
-    </div>
-  </div>
+<div id="cta"></div>
 
-  <div class="section">
-    <div class="section-h">📊 Chart (TradingView)</div>
-    <div class="tv-chart" id="tv-chart-container"></div>
-  </div>
+<div class="notes">
+  <textarea id="note" placeholder="Dagelijkse notitie (lokaal opgeslagen)..." rows="1"></textarea>
+</div>
 
-  <div class="section">
-    <div class="section-h">🚨 Recente alerts</div>
-    <div id="alerts-list"></div>
-  </div>
-
-  <div class="section">
-    <div class="section-h">📋 Posities (uit Notion)</div>
-    <div id="positions"></div>
+<!-- Portfolio summary with NOW numbers -->
+<div class="psum">
+  <div class="psum-g">
+    <div class="psum-i"><div class="psum-l">Portfolio waarde</div><div class="psum-v tnum" id="pv">—</div><div class="psum-s">aandelen + opties</div></div>
+    <div class="psum-i"><div class="psum-l">Opties ongerealiseerd</div><div class="psum-v tnum" id="pou">—</div><div class="psum-s">huidige marktprijs</div></div>
+    <div class="psum-i"><div class="psum-l">Portfolio breakeven</div><div class="psum-v tnum" id="pbe">—</div><div class="psum-s">bij JUN expiratie</div></div>
+    <div class="psum-i"><div class="psum-l">Risico vanaf nu</div><div class="psum-v tnum" id="pmax">—</div><div class="psum-s">huidige marktwaarde opties</div></div>
   </div>
 </div>
 
-<div class="modal" id="add-modal">
-  <div class="modal-c">
-    <div class="modal-h">
-      <h3>Ticker handmatig toevoegen</h3>
-      <button class="close-btn" id="add-close">×</button>
+<!-- Snapshots -->
+<div class="sh"><h2>Scenario snapshots</h2><span class="tag">Bij JUN expiratie</span></div>
+<div class="snap-grid" id="snaps"></div>
+
+<div class="sh"><h2>Catalysts</h2><span class="tag" id="jc">JUN expiratie · 62 dagen</span></div>
+<div class="cats" id="cats"></div>
+
+<div class="sh"><h2>Wat-als simulator</h2><span class="tag">Custom prijs</span></div>
+<div class="sim">
+  <div class="sim-row">
+    <label>ALT prijs</label>
+    <input type="range" id="sl" min="2" max="30" step="0.25" value="3.09">
+    <span class="sim-val" id="slo">$2.82</span>
+  </div>
+  <div class="tabs" id="etabs">
+    <button class="tab" data-exp="JUN">JUN 18</button>
+    <button class="tab" data-exp="SEP">SEP 18</button>
+    <button class="tab" data-exp="JAN">JAN '27</button>
+    <button class="tab active" data-exp="ALL">Alles</button>
+  </div>
+  <div class="plg">
+    <div class="plc"><div class="plc-l">Aandelen</div><div class="plc-v tnum" id="spl">—</div></div>
+    <div class="plc"><div class="plc-l">Opties</div><div class="plc-v tnum" id="opl">—</div></div>
+    <div class="plc total"><div class="plc-l">Totaal P/L</div><div class="plc-v tnum" id="tpl">—</div></div>
+  </div>
+</div>
+
+<div class="grid2">
+  <div>
+    <div class="sh"><h2>Posities</h2><span class="tag">Tik voor detail →</span></div>
+    <div class="tip warn"><strong>Marktprijzen opties zijn modelschattingen</strong> na -19% spot move (van $3.49 → $2.82). Refresh handmatig in code voor exacte broker-waardes. Simulator P/L bij expiratie is exact (intrinsiek − cost basis).</div>
+    <div class="pos" id="pt"></div>
+  </div>
+  <div>
+    <div class="sh"><h2>Scale-out triggers</h2><span class="tag">Exit bij piek</span></div>
+    <div class="sos" id="sl-list"></div>
+  </div>
+</div>
+
+<div class="sh"><h2>Scenario's per tijdsvenster</h2><span class="tag">Alleen relevante opties</span></div>
+<div class="scn" id="scn"></div>
+
+<footer class="ft">
+  <div><strong>Bewaar op homescreen:</strong> iPhone Safari → Deel → Zet op beginscherm. Android Chrome → Menu → Toevoegen aan startscherm.</div>
+  <div style="margin-top:6px;font-style:italic">Persoonlijke analyse. Geen beleggingsadvies. Per 1 mei 2026 (post-offering, post-13Gs).</div>
+</footer>
+
+</div>
+
+<div class="mbd" id="mbd"></div>
+<div class="m" id="mod">
+  <div class="mh">
+    <div>
+      <h3 id="mt">Positie detail</h3>
+      <div class="mh-sub" id="msub">—</div>
     </div>
-    <p style="font-size:12px;color:var(--td);margin-bottom:14px">Tip: tickers worden automatisch toegevoegd zodra TradingView een alert stuurt voor die ticker. Hier handmatig is alleen voor preview.</p>
-    <div class="field">
-      <label>Ticker symbool</label>
-      <input type="text" id="add-input" placeholder="GLXY" autocapitalize="characters">
-    </div>
-    <button class="btn" id="add-save">Toevoegen</button>
+    <button class="mc" id="mclose">×</button>
+  </div>
+  <div class="mt-row">
+    <button class="mt active" data-panel="q">Snel</button>
+    <button class="mt" data-panel="so">Scale-out</button>
+    <button class="mt" data-panel="hl">Hold</button>
+    <button class="mt" data-panel="rl">Roll</button>
+  </div>
+  <div class="mct">
+    <div class="mp active" id="p-q"></div>
+    <div class="mp" id="p-so"></div>
+    <div class="mp" id="p-hl"></div>
+    <div class="mp" id="p-rl"></div>
   </div>
 </div>
 
 <script>
+// ===== DATA =====
+const TODAY = new Date(2026, 4, 11);
+const CURRENT_PRICE = 3.09; // 11 mei 07:30 IBKR pre-market
+const BASIS = 3.50; // historisch cost basis voor aandelen P/L
+const SHARES = 23000;
+
+// Catalysts met type en details (type bepaalt kleur/icon)
+// type: "earnings" | "data" | "regulatory" | "expiry" | "deal" | "conference" | "ownership"
+const CATS = [
+  ["Smart money 13Gs", new Date(2026, 4, 1), "soon", "ownership", "TCG Crossover (20M, 9.8%) + RA Capital (13M, 6.5%) + Deep Track (19.4M, 9.99%) = 52.4M shares (~70% offering allocatie)"],
+  ["Q1 earnings", new Date(2026, 4, 8), "crit", "earnings", "Q1 2026 results call - mogelijke deal-update of Phase 3 timing"],
+  ["EASL congres", new Date(2026, 4, 27), "soon", "conference", "EASL Barcelona 27-30 mei - BD-window, potentiele partnership talks"],
+  ["JUN opties exp", new Date(2026, 5, 18), "crit", "expiry", "JUN 4C/5C/6C verlopen"],
+  ["Garijo strategic review", new Date(2026, 7, 1), "", "deal", "Sanofi review (Garijo gestart 29 apr 2026, 3-6 mnd doorlooptijd)"],
+  ["RECLAIM AUD data", new Date(2026, 8, 15), "soon", "data", "Phase 2 AUD topline - heavy drinking days primary endpoint + PEth biomarker"],
+  ["SEP opties exp", new Date(2026, 8, 18), "", "expiry", "SEP 4C/7C verlopen"],
+  ["RESTORE ALD data", new Date(2026, 11, 1), "", "data", "Phase 2 ALD - LSM via FibroScan primary, week 48"],
+  ["EMA scientific advice", new Date(2026, 11, 31), "", "regulatory", "EMA advies Phase 3 protocol - relevant voor Roche EU-licensing"],
+  ["Deal-window opent", new Date(2027, 0, 1), "", "deal", "Master doc v4: deal-kans Q4 2026-Q1 2027 = 80%, gecentreerd jan-feb 2027 (Akero analoog)"],
+  ["JAN27 opties exp", new Date(2027, 0, 15), "", "expiry", "JAN 7C/10C verlopen"],
+  ["Phase 3 MASH start", new Date(2027, 1, 28), "", "regulatory", "1800 patients, 52-week biopsy endpoint"]
+];
+
+const POS = [
+  {id:"may3c", exp:"MAY 15 '26", ex:"MAY", d:new Date(2026,4,15), k:3,   q:15,  c:0.12, m:0.20},
+  {id:"jun053_5c", exp:"JUN 05 '26", ex:"JUN05", d:new Date(2026,5,5), k:3.5, q:40,  c:0.16, m:0.12},
+  {id:"jun4c", exp:"JUN 18 '26", ex:"JUN", d:new Date(2026,5,18), k:4,  q:100, c:0.28, m:0.08},
+  {id:"jun5c", exp:"JUN 18 '26", ex:"JUN", d:new Date(2026,5,18), k:5,  q:180, c:0.39, m:0.01},
+  {id:"jun6c", exp:"JUN 18 '26", ex:"JUN", d:new Date(2026,5,18), k:6,  q:29,  c:1.10, m:0.00},
+  {id:"sep4c", exp:"SEP 18 '26", ex:"SEP", d:new Date(2026,8,18), k:4,  q:25,  c:0.63, m:0.35},
+  {id:"sep7c", exp:"SEP 18 '26", ex:"SEP", d:new Date(2026,8,18), k:7,  q:16,  c:0.50, m:0.13},
+  {id:"jan4c", exp:"JAN 15 '27", ex:"JAN", d:new Date(2027,0,15), k:4,  q:15,  c:0.60, m:0.65},
+  {id:"jan5c", exp:"JAN 15 '27", ex:"JAN", d:new Date(2027,0,15), k:5,  q:15,  c:0.50, m:0.48},
+  {id:"jan7c", exp:"JAN 15 '27", ex:"JAN", d:new Date(2027,0,15), k:7,  q:31,  c:1.99, m:0.36},
+  {id:"jan10c",exp:"JAN 15 '27", ex:"JAN", d:new Date(2027,0,15), k:10, q:1,   c:1.04, m:0.25}
+];
+
+// Scenario's met TIJDSVENSTER - welke opties zijn actief
+// window: "pre-jun" = vóór 18 juni, "pre-sep" = na JUN exp, "pre-jan" = na SEP exp
+// Probabilities per master doc v4 (1 mei 2026): Roche 30%, Sanofi 30%, geen deal 15%, bidding war 20%, andere 5%
+const SCN = [
+  {p:0.15, d:"Geen deal, drift sub-$3.50", t:"$2.80-$3.50", mid:3.15, window:"pre-jun", note:"Warrant-cap dominant, status quo"},
+  {p:0.05, d:"EASL pop (geen deal)", t:"$4.00-$5.00", mid:4.50, window:"pre-jun", note:"Pre-EASL speculation, sentiment-rally"},
+  {p:0.05, d:"Roche vroege licensing", t:"$5-7", mid:6.00, window:"pre-sep", note:"Zeldzaam: pre-RECLAIM aankondiging"},
+  {p:0.25, d:"Roche EU-licensing Q4", t:"$7-10", mid:8.50, window:"pre-jan", note:"Hoofd Roche scenario, post-RECLAIM"},
+  {p:0.30, d:"Sanofi full buyout Q4-Q1", t:"$40-55", mid:47.50, window:"pre-jan", note:"Garijo signature deal, na strategic review"},
+  {p:0.20, d:"Bidding war Roche+Sanofi", t:"$65-95", mid:80, window:"pre-jan", note:"Mega-scenario, beide bidders aanwezig"}
+];
+
+const SO = [
+  {t:"Sell 25% JUN 4C (eerste tranche)", r:"Prijs > $4.20 (overhang absorbed)", tr:4.20},
+  {t:"Sell 60% JUN 5C (HOOFDtrigger)", r:"Prijs > $5.60 (Alyeska resell zone)", tr:5.60},
+  {t:"Sell 50% JUN 6C", r:"Prijs > $7.00 (deal hint / breakout)", tr:7.00},
+  {t:"Sell 40% SEP 7C", r:"Prijs > $10 (post-RECLAIM positief)", tr:10.00},
+  {t:"Sell 40% JAN 7C", r:"Prijs > $18 (analyst consensus)", tr:18.00},
+  {t:"Sell ALLE JAN bij buyout", r:"Prijs > $40 (Sanofi range)", tr:40.00}
+];
+
+// Snapshots: 4 key prices bij JUN expiratie
+const SNAPS = [
+  {label:"Huidig", price:CURRENT_PRICE, sub:"Warrant cap actief", badge:"NU"},
+  {label:"EASL pop", price:4.50, sub:"Sentiment-rally", badge:"5%"},
+  {label:"Roche Q4", price:8.50, sub:"EU licensing", badge:"25%"},
+  {label:"Sanofi buyout", price:47.50, sub:"Q4-Q1 acquisition", badge:"30%"}
+];
+
+// ===== HELPERS =====
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
+const days = d => Math.ceil((d - TODAY) / 86400000);
 
-// State
-let activeTicker = 'ALT'; // default
-let tickers = ['ALT']; // expanded by webhook + manual
-let alerts = [];
-let priceData = {}; // ticker -> data
-let posData = {}; // ticker -> positions
-let tvWidget = null;
-
-// LocalStorage for manually-added tickers
-function loadTickers() {
-  try {
-    const saved = JSON.parse(localStorage.getItem('trading:tickers') || '[]');
-    return ['ALT', ...saved.filter(t => t !== 'ALT')];
-  } catch { return ['ALT']; }
+function fmt(n, small=false) {
+  const r = Math.round(n);
+  const sign = r >= 0 ? "+" : "-";
+  const abs = Math.abs(r);
+  if (small && abs >= 1000) return sign + "$" + (abs/1000).toFixed(1) + "k";
+  return sign + "$" + abs.toLocaleString("en-US");
 }
 
-function saveTickers() {
-  const custom = tickers.filter(t => t !== 'ALT');
-  localStorage.setItem('trading:tickers', JSON.stringify(custom));
+const plCls = n => n > 0 ? "profit" : n < 0 ? "loss" : "";
+const getPos = id => POS.find(p => p.id === id);
+
+// P/L bij expiratie op gegeven prijs (intrinsiek − kost)
+const posPLExp = (p, pr) => (Math.max(0, pr - p.k) - p.c) * 100 * p.q;
+
+// P/L NU (huidige marktprijs − kost)
+const posPLNow = p => (p.m - p.c) * 100 * p.q;
+
+// Huidige marktwaarde van positie
+const posValueNow = p => p.m * 100 * p.q;
+
+// Kost (inleg)
+const posCost = p => p.c * 100 * p.q;
+
+// Aandelen P/L
+const stockPL = pr => (pr - BASIS) * SHARES;
+const stockValue = pr => pr * SHARES;
+
+// Alleen actieve opties op tijdsvenster
+function activePos(window) {
+  if (window === "pre-jun") return POS; // alles actief
+  if (window === "pre-sep") return POS.filter(p => p.ex !== "JUN");
+  if (window === "pre-jan") return POS.filter(p => p.ex === "JAN");
+  if (window === "post-jan") return [];
+  return POS;
 }
 
-tickers = loadTickers();
+function optPL(pr, expFilter) {
+  return POS.reduce((sum, p) => {
+    if (expFilter && expFilter !== "ALL" && p.ex !== expFilter) return sum;
+    return sum + posPLExp(p, pr);
+  }, 0);
+}
 
-// ===== TICKER MANAGEMENT =====
-function addTicker(t) {
-  t = t.toUpperCase().trim();
-  if (!/^[A-Z][A-Z0-9.-]{0,9}$/.test(t)) { alert('Ongeldige ticker'); return; }
-  if (!tickers.includes(t)) {
-    tickers.push(t);
-    saveTickers();
-    renderTabs();
-    setActive(t);
+function totalPLAtExp(pr) {
+  return stockPL(pr) + optPL(pr, "ALL");
+}
+
+// Scenario-aware total P/L: alleen opties actief op scenario-window
+function scenarioPL(scenario) {
+  const active = activePos(scenario.window);
+  const expired = POS.filter(p => !active.includes(p));
+  // Verlopen opties: alleen kost verloren (als ze OTM waren bij expiratie)
+  // We assume bij scenario mid-prijs uit van wat WAARD was op hun expiratie
+  // Simpel model: verlopen opties uitgevoerd op scenario mid-prijs → intrinsiek waard
+  let expiredPL = 0;
+  expired.forEach(p => {
+    expiredPL += posPLExp(p, scenario.mid);
+  });
+  let activePL = 0;
+  active.forEach(p => {
+    activePL += posPLExp(p, scenario.mid);
+  });
+  return stockPL(scenario.mid) + expiredPL + activePL;
+}
+
+// Portfolio breakeven (bij JUN expiratie, alle opties actief)
+function portfolioBreakeven() {
+  let lo = 0, hi = 50;
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2;
+    if (totalPLAtExp(mid) < 0) lo = mid;
+    else hi = mid;
   }
+  return (lo + hi) / 2;
 }
 
-function setActive(t) {
-  activeTicker = t;
-  renderTabs();
-  loadAll();
+// Correct EV: gebruik scenarioPL (tijd-bewust)
+function scenarioEV() {
+  return SCN.reduce((sum, s) => sum + s.p * scenarioPL(s), 0);
 }
 
-function renderTabs() {
-  const html = tickers.map(t => {
-    const p = priceData[t];
-    const ch = p ? `<span class="ch ${p.change>=0?'up':'down'}">${p.change>=0?'+':''}${p.changePercent.toFixed(1)}%</span>` : '';
-    return `<button class="tab ${t===activeTicker?'active':''}" data-tk="${t}">${t}${ch}</button>`;
-  }).join('') + '<button class="add-tab" id="add-tab-btn">+ Ticker</button>';
-  $('#tabs').innerHTML = html;
-  $$('.tab').forEach(b => b.addEventListener('click', () => setActive(b.dataset.tk)));
-  $('#add-tab-btn').addEventListener('click', () => $('#add-modal').classList.add('open'));
+function totalOptionRisk() {
+  return POS.reduce((sum, p) => sum + posCost(p), 0);
 }
 
-// ===== DATA LOADERS =====
-async function loadPrice(ticker) {
-  try {
-    const r = await fetch(`/api/price?ticker=${ticker}`, { cache: 'no-store' });
-    if (!r.ok) throw new Error('price ' + r.status);
-    const d = await r.json();
-    if (d.error) throw new Error(d.error);
-    priceData[ticker] = d;
-    return d;
-  } catch (err) {
-    return null;
+function currentOptionValue() {
+  return POS.reduce((sum, p) => sum + posValueNow(p), 0);
+}
+
+function currentOptionUnrealized() {
+  return POS.reduce((sum, p) => sum + posPLNow(p), 0);
+}
+
+function totalPortfolioValue() {
+  return stockValue(CURRENT_PRICE) + currentOptionValue();
+}
+
+// ===== CTA - alle actieve triggers tonen =====
+function renderCTA() {
+  const price = parseFloat($("#sl").value);
+  const hit = SO.filter(s => price >= s.tr);
+  const earnD = days(new Date(2026, 4, 8));
+  const easlD = days(new Date(2026, 4, 27));
+  const junD = days(new Date(2026, 5, 18));
+  const reclaim = days(new Date(2026, 8, 15));
+  
+  // Verzamel ALLE actieve alerts
+  const alerts = [];
+  
+  // Scale-out triggers (één voor één)
+  hit.forEach(s => {
+    alerts.push({
+      cls: "alert",
+      lbl: "Scale-out trigger",
+      title: s.t,
+      body: `${s.r} · Trigger bij $${s.tr.toFixed(2)}, nu $${price.toFixed(2)}`,
+      priority: 1
+    });
+  });
+  
+  // Smart money 13G context (always shown, recent)
+  alerts.push({
+    cls: "info",
+    lbl: "Smart money 13Gs",
+    title: `52.4M shares (~70% offering) naar 3 specialists`,
+    body: `<strong>TCG Crossover</strong> 9.80% (Carmot→Roche track) · <strong>Deep Track</strong> 9.99% · <strong>RA Capital</strong> 6.5%. Allocatie was high-quality, niet fast-flip.`,
+    priority: 4
+  });
+  
+  // Warrant cap context onder $3.30
+  if (price <= 3.30) {
+    alerts.push({
+      cls: "warn",
+      lbl: "Warrant cap actief",
+      title: `Mechanisch plafond rond $3.00-$3.30`,
+      body: `75M warrants @ $3.00 strike + ~$175M shelf restant = dubbele structurele drag op rallies. Zwakt af na Q3 RECLAIM data.`,
+      priority: 5
+    });
   }
+  
+  // Earnings dichtbij
+  if (earnD > 0 && earnD <= 14) {
+    alerts.push({
+      cls: "warn",
+      lbl: "Earnings",
+      title: `Q1 earnings over ${earnD} dagen (8 mei)`,
+      body: `IV stijgt vóór earnings. Post-earnings IV-crush typisch. Eerste post-offering call - mogelijke Phase 3 timing/deal-update.`,
+      priority: 2
+    });
+  }
+  
+  // EASL nadert
+  if (easlD > 0 && easlD <= 21) {
+    alerts.push({
+      cls: "info",
+      lbl: "EASL congres",
+      title: `EASL Barcelona over ${easlD} dagen (27-30 mei)`,
+      body: `BD-window. Pemvidutide aanwezigheid niet bevestigd. Monitor pre-market & optievolume.`,
+      priority: 3
+    });
+  }
+  
+  // Theta kill zone
+  if (junD > 0 && junD <= 30) {
+    alerts.push({
+      cls: "warn",
+      lbl: "Theta kill",
+      title: `JUN expiratie over ${junD} dagen`,
+      body: `Tijdwaarde-decay versnelt laatste 30d. JUN 5C/6C nu deep OTM bij $${price.toFixed(2)}. Overweeg rollen of laten lopen.`,
+      priority: 2
+    });
+  }
+  
+  // RECLAIM dichtbij
+  if (reclaim > 0 && reclaim <= 60) {
+    alerts.push({
+      cls: "info",
+      lbl: "RECLAIM data",
+      title: `RECLAIM AUD readout over ${reclaim} dagen`,
+      body: `Phase 2 AUD topline (Q3). Heavy drinking days primary + PEth. Positief = SEP/JAN opties pop, warrant cap zwakt af.`,
+      priority: 3
+    });
+  }
+  
+  // Default als geen alerts
+  if (alerts.length === 0) {
+    alerts.push({
+      cls: "info",
+      lbl: "Normale modus",
+      title: `${easlD}d tot EASL · ${junD}d tot JUN exp · ${reclaim}d tot RECLAIM`,
+      body: `Geen urgente triggers. Monitor scant automatisch bij prijsbewegingen.`,
+      priority: 9
+    });
+  }
+  
+  // Sorteer op priority (1=hoogst)
+  alerts.sort((a, b) => a.priority - b.priority);
+  
+  // Render alle alerts
+  $("#cta").innerHTML = alerts.map(a => `
+    <div class="cta ${a.cls}">
+      <div class="cta-lbl"><span class="cta-dot"></span>${a.lbl}</div>
+      <div class="cta-title">${a.title}</div>
+      <div class="cta-body">${a.body}</div>
+    </div>
+  `).join("");
 }
 
-async function loadAlerts() {
-  try {
-    const r = await fetch('/api/alerts', { cache: 'no-store' });
-    if (!r.ok) throw new Error();
-    const d = await r.json();
-    alerts = d.alerts || [];
-    // Auto-add tickers from alerts
-    if (d.tickers) {
-      d.tickers.forEach(t => {
-        if (!tickers.includes(t)) {
-          tickers.push(t);
-          saveTickers();
-        }
+// ===== PORTFOLIO SUMMARY =====
+function renderPSum() {
+  const pv = totalPortfolioValue();
+  const pou = currentOptionUnrealized();
+  const pbe = portfolioBreakeven();
+  const pmax = currentOptionValue(); // ECHTE risico vanaf nu = huidige marktwaarde, niet cost basis
+  
+  $("#pv").textContent = `$${Math.round(pv).toLocaleString("en-US")}`;
+  const pouEl = $("#pou");
+  pouEl.textContent = fmt(pou);
+  pouEl.className = "psum-v tnum " + plCls(pou);
+  $("#pbe").textContent = `$${pbe.toFixed(2)}`;
+  $("#pmax").textContent = `-$${Math.round(pmax).toLocaleString("en-US")}`;
+}
+
+// ===== SNAPSHOTS =====
+function renderSnaps() {
+  $("#snaps").innerHTML = SNAPS.map(s => {
+    const pl = totalPLAtExp(s.price);
+    return `
+      <div class="snap" data-snap-price="${s.price}">
+        <div class="snap-badge">${s.badge}</div>
+        <div class="snap-label">${s.label}</div>
+        <div class="snap-price">$${s.price.toFixed(2)}</div>
+        <div class="snap-pl ${plCls(pl)}">${fmt(pl, true)}</div>
+        <div class="snap-sub">${s.sub}</div>
+      </div>
+    `;
+  }).join("");
+  $$(".snap").forEach(el => {
+    el.addEventListener("click", () => {
+      $("#sl").value = parseFloat(el.dataset.snapPrice);
+      updateSim();
+    });
+  });
+}
+
+// ===== CATALYSTS =====
+function renderCats() {
+  // Type icons voor catalysts
+  const icons = {
+    "earnings": "💰",
+    "data": "📊",
+    "regulatory": "⚖️",
+    "expiry": "⏰",
+    "deal": "🤝",
+    "conference": "🎤"
+  };
+  
+  $("#cats").innerHTML = CATS.map(([lbl, date, level, type, detail]) => {
+    const d = days(date);
+    const ds = date.toLocaleDateString("nl-NL", {day:"numeric", month:"short"});
+    const cls = d < 30 ? "crit" : d < 90 ? "soon" : "";
+    const icon = icons[type] || "•";
+    return `<div class="cat ${cls}" title="${detail || ''}">
+      <div class="cat-lbl">${icon} ${lbl}</div>
+      <div class="cat-d tnum">${d}</div>
+      <div class="cat-u">dagen</div>
+      <div class="cat-dt">${ds}</div>
+      ${detail ? `<div class="cat-detail">${detail}</div>` : ''}
+    </div>`;
+  }).join("");
+  $("#jc").textContent = `JUN expiratie · ${days(new Date(2026, 5, 18))} dagen`;
+}
+
+// ===== POSITIONS =====
+function renderPos(price) {
+  const hdr = `<div class="pr hdr"><div>Expiry</div><div>Strike</div><div>Qty</div><div style="text-align:right">Nu</div><div style="text-align:right">P/L @${price.toFixed(2)} exp</div><div class="pr-exp" style="display:none"></div><div></div></div>`;
+  const rows = POS.map(p => {
+    const now = posPLNow(p);
+    const exp = posPLExp(p, price);
+    const parts = p.exp.split(" ");
+    return `
+      <div class="pr" data-pid="${p.id}">
+        <div class="pr-e">${parts[0]} ${parts[1]}</div>
+        <div class="pr-s tnum">$${p.k}C</div>
+        <div class="pr-q tnum">${p.q}×</div>
+        <div class="pr-now tnum ${plCls(now)}">${fmt(now, true)}</div>
+        <div class="pr-exp tnum ${plCls(exp)}">${fmt(exp, true)}</div>
+        <div class="pr-a">›</div>
+      </div>
+    `;
+  }).join("");
+  $("#pt").innerHTML = hdr + rows;
+  $$(".pr[data-pid]").forEach(r => r.addEventListener("click", () => openDetail(r.dataset.pid)));
+}
+
+function renderSO(price) {
+  $("#sl-list").innerHTML = SO.map(s => {
+    const hit = price >= s.tr;
+    return `<div class="so ${hit ? "hit" : ""}"><div class="so-dot"></div><div class="so-c"><div class="so-t">${s.t}</div><div class="so-r">${s.r}</div></div><div class="so-v tnum">$${s.tr.toFixed(2)}</div></div>`;
+  }).join("");
+}
+
+// ===== SCENARIOS (time-aware) =====
+function renderScn() {
+  const ev = scenarioEV();
+  const windowLabels = {
+    "pre-jun": "Pre-JUN",
+    "pre-sep": "Post-JUN",
+    "pre-jan": "Post-SEP",
+    "post-jan": "Post-JAN"
+  };
+  
+  $("#scn").innerHTML = SCN.map(s => {
+    const pl = scenarioPL(s);
+    const contrib = s.p * pl;
+    return `
+      <div class="sc" title="${s.note}">
+        <div class="sc-p tnum">${(s.p*100).toFixed(0)}%</div>
+        <div class="sc-d">${s.d}</div>
+        <div class="sc-t tnum">${s.t}</div>
+        <div class="sc-w">${windowLabels[s.window]}</div>
+        <div class="sc-ev tnum ${plCls(contrib)}">${fmt(contrib, true)}</div>
+      </div>
+    `;
+  }).join("") + `
+    <div class="sc" style="background:var(--c2);border-color:var(--bs);margin-top:4px">
+      <div class="sc-p" style="color:var(--t)">Σ</div>
+      <div class="sc-d"><strong>Expected value (tijd-gewogen)</strong></div>
+      <div class="sc-t"></div>
+      <div class="sc-w"></div>
+      <div class="sc-ev tnum ${plCls(ev)}">${fmt(ev, true)}</div>
+    </div>
+  `;
+}
+
+// ===== SIMULATOR =====
+function updateSim() {
+  const price = parseFloat($("#sl").value);
+  const tab = document.querySelector(".tab.active").dataset.exp;
+  
+  $("#slo").textContent = "$" + price.toFixed(2);
+  
+  const s = stockPL(price), o = optPL(price, tab), t = s + o;
+  $("#spl").textContent = fmt(s); $("#spl").className = "plc-v tnum " + plCls(s);
+  $("#opl").textContent = fmt(o); $("#opl").className = "plc-v tnum " + plCls(o);
+  $("#tpl").textContent = fmt(t); $("#tpl").className = "plc-v tnum " + plCls(t);
+  
+  renderPos(price);
+  renderSO(price);
+  renderCTA();
+  
+  $$(".snap").forEach(el => {
+    el.classList.toggle("active", parseFloat(el.dataset.snapPrice) === price);
+  });
+}
+
+// ===== MODAL =====
+let cPos = null, cPrice = 0, cOpt = 0, cTarget = 5000;
+
+function openDetail(id) {
+  cPos = getPos(id);
+  cPrice = parseFloat($("#sl").value);
+  cOpt = cPos.m;
+  cTarget = 5000;
+  
+  $("#mt").textContent = `${cPos.exp} · $${cPos.k} Call`;
+  const dte = days(cPos.d);
+  $("#msub").textContent = `${cPos.q}× · gem $${cPos.c.toFixed(2)} · marktprijs $${cPos.m.toFixed(2)} · inleg $${posCost(cPos).toLocaleString("en-US",{maximumFractionDigits:0})} · ${dte}d`;
+  
+  $$(".mt").forEach(t => t.classList.remove("active"));
+  $$(".mp").forEach(p => p.classList.remove("active"));
+  document.querySelector(".mt[data-panel='q']").classList.add("active");
+  $("#p-q").classList.add("active");
+  
+  renderPanels();
+  $("#mbd").classList.add("on");
+  $("#mod").classList.add("on");
+  document.body.style.overflow = "hidden";
+}
+
+function closeDetail() {
+  $("#mbd").classList.remove("on");
+  $("#mod").classList.remove("on");
+  document.body.style.overflow = "";
+  cPos = null;
+}
+
+function renderPanels() { renderQ(); renderSOPanel(); renderHold(); renderRoll(); }
+
+function renderQ() {
+  const p = cPos, pr = cPrice;
+  const cost = posCost(p);
+  const val = posValueNow(p);
+  const plNow = val - cost;
+  const be = p.k + p.c;
+  const intrins = Math.max(0, pr - p.k);
+  const tv = Math.max(0, p.m - intrins);
+  const tvPct = p.m > 0 ? (tv / p.m * 100) : 0;
+  const dte = days(p.d);
+  
+  // IV warning: alleen als DIEP OTM én tijdwaarde >80% (dus geen intrinsieke waarde te verdedigen)
+  const deepOTM = pr < p.k - 0.5;
+  const shouldWarn = deepOTM && tvPct > 80 && p.m > 0.05 && dte < 90;
+  
+  let ivWarn = "";
+  if (shouldWarn) {
+    ivWarn = `<div class="tip warn"><strong>Hoge tijdwaarde bij diep OTM:</strong> ${tvPct.toFixed(0)}% van premium is tijdwaarde. Bij IV-crush daalt optie sterk ook zonder aandelenbeweging. Overweeg rolling of sluiten.</div>`;
+  }
+  
+  const scenarios = [
+    ["Nu", pr],
+    ["Breakeven", be],
+    ["EASL run", 5.50],
+    ["Deal zone", 8.50],
+    ["Buyout", 15]
+  ];
+  
+  const rows = scenarios.map(([lbl, price]) => {
+    const plExp = posPLExp(p, price);
+    const vs = plExp - plNow;
+    return `<div class="tr"><div class="v tnum">$${price.toFixed(2)}</div><div class="m- tnum" style="font-size:12px">${lbl}</div><div class="pl tnum ${plCls(plExp)}">${fmt(plExp, true)}</div><div class="pl tnum ${plCls(vs)}" style="font-size:11px">${fmt(vs, true)}</div></div>`;
+  }).join("");
+  
+  $("#p-q").innerHTML = `
+    <div class="sg">
+      <div class="sb"><div class="sb-l">Waarde nu</div><div class="sb-v tnum">$${Math.round(val).toLocaleString("en-US")}</div></div>
+      <div class="sb"><div class="sb-l">P/L NU</div><div class="sb-v tnum ${plCls(plNow)}">${fmt(plNow)}</div></div>
+      <div class="sb"><div class="sb-l">Breakeven exp</div><div class="sb-v tnum">$${be.toFixed(2)}</div></div>
+      <div class="sb"><div class="sb-l">Tijdwaarde</div><div class="sb-v tnum">$${tv.toFixed(2)} (${tvPct.toFixed(0)}%)</div></div>
+    </div>
+    ${ivWarn}
+    <div class="sh" style="margin:8px 0 10px"><h2 style="font-size:10px">P/L bij expiratie per eindprijs</h2></div>
+    <div class="tbl">
+      <div class="tr h"><div>Prijs</div><div>Label</div><div>P/L exp</div><div style="text-align:right">vs nu</div></div>
+      ${rows}
+    </div>
+    <div class="tip"><strong>Nu vs expiratie:</strong> "P/L NU" is wat je realiseert bij directe verkoop op marktprijs. Tabel toont waarde <em>als je vasthoudt tot expiratie</em>.</div>
+  `;
+}
+
+function renderSOPanel() {
+  const p = cPos;
+  const targets = [2500, 5000, 10000, 25000, 50000];
+  
+  $("#p-so").innerHTML = `
+    <div class="tig">
+      <div class="tig-h"><div class="tig-l">Dollar winstdoel</div><div class="tig-v tnum" id="tdsp">$${cTarget.toLocaleString("en-US")}</div></div>
+      <div class="pills" id="pills">
+        ${targets.map(t => `<button class="pill ${t === cTarget ? "active" : ""}" data-t="${t}">$${t >= 1000 ? (t/1000) + "k" : t}</button>`).join("")}
+        <button class="pill" data-custom="1">Custom</button>
+      </div>
+    </div>
+    <div class="ir">
+      <label>Huidige optieprijs</label><span class="u">$</span>
+      <input type="number" id="oi" value="${cOpt.toFixed(2)}" step="0.01" min="0">
+    </div>
+    <div class="sh" style="margin:14px 0 8px"><h2 style="font-size:10px">Aanbeveling</h2></div>
+    <div id="sor"></div>
+    <div class="sh" style="margin:14px 0 8px"><h2 style="font-size:10px">Percentage referentie</h2></div>
+    <div class="tbl" id="pct"></div>
+  `;
+  
+  $$("#pills .pill[data-t]").forEach(pill => {
+    pill.addEventListener("click", () => {
+      cTarget = parseInt(pill.dataset.t);
+      $$("#pills .pill").forEach(el => el.classList.remove("active"));
+      pill.classList.add("active");
+      $("#tdsp").textContent = `$${cTarget.toLocaleString("en-US")}`;
+      updateSO();
+    });
+  });
+  
+  document.querySelector("#pills .pill[data-custom]").addEventListener("click", () => {
+    const v = prompt("Winstdoel (USD):", cTarget);
+    if (v === null) return;
+    const n = parseInt(String(v).replace(/\D/g, ""));
+    if (isNaN(n) || n <= 0) return;
+    cTarget = n;
+    $$("#pills .pill").forEach(el => el.classList.remove("active"));
+    $("#tdsp").textContent = `$${cTarget.toLocaleString("en-US")}`;
+    updateSO();
+  });
+  
+  $("#oi").addEventListener("input", e => {
+    const v = parseFloat(e.target.value);
+    if (!isNaN(v) && v >= 0) { cOpt = v; updateSO(); }
+  });
+  
+  updateSO();
+}
+
+function updateSO() {
+  const p = cPos, op = cOpt;
+  const ppc = (op - p.c) * 100;
+  
+  let html = "";
+  if (op <= p.c) {
+    html = `<div class="rec w"><div class="rec-l">Geen winst</div><div class="rec-t">Optieprijs $${op.toFixed(2)} ≤ kostprijs $${p.c.toFixed(2)}. Verkopen = verlies <strong>${fmt((op - p.c) * 100 * p.q)}</strong> bij alles verkopen. Overweeg doorrollen of wachten.</div></div>`;
+  } else {
+    const nSell = Math.ceil(cTarget / ppc);
+    if (nSell > p.q) {
+      const max = p.q * ppc;
+      html = `<div class="rec w"><div class="rec-l">Target te hoog</div><div class="rec-t">Bij <strong>$${op.toFixed(2)}</strong> is max winst <strong>${fmt(max)}</strong> (alles ${p.q}× verkopen). Target $${cTarget.toLocaleString("en-US")} vereist hogere optieprijs.</div></div>`;
+    } else {
+      const profit = nSell * ppc;
+      const proc = nSell * op * 100;
+      const left = p.q - nSell;
+      const leftCost = left * p.c * 100;
+      const pct = (nSell / p.q * 100).toFixed(0);
+      html = `<div class="rec"><div class="rec-l">Aanbeveling</div><div class="rec-t">Verkoop <strong>${nSell}×</strong> (${pct}% van ${p.q}) @ $${op.toFixed(2)}<br>→ Opbrengst <strong>$${proc.toLocaleString("en-US",{maximumFractionDigits:0})}</strong><br>→ Gerealiseerde winst <strong>${fmt(profit)}</strong><br>→ Rest: ${left}× (inleg $${leftCost.toLocaleString("en-US",{maximumFractionDigits:0})}) voor upside</div></div>`;
+    }
+  }
+  $("#sor").innerHTML = html;
+  
+  $("#pct").innerHTML = `<div class="tr h"><div>Sell %</div><div>Aantal</div><div>Houd</div><div style="text-align:right">Winst</div></div>` +
+    [25, 50, 75, 100].map(pct => {
+      const n = Math.round(p.q * pct / 100);
+      const keep = p.q - n;
+      const prof = n * (op - p.c) * 100;
+      return `<div class="tr"><div class="p tnum">${pct}%</div><div class="v tnum">${n}×</div><div class="m- tnum">${keep}×</div><div class="pl tnum ${plCls(prof)}">${fmt(prof, true)}</div></div>`;
+    }).join("");
+}
+
+function renderHold() {
+  const p = cPos;
+  const dte = days(p.d);
+  const cost = posCost(p);
+  const prices = [3, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8, 10, 15, 20];
+  const be = p.k + p.c;
+  const need = ((be - CURRENT_PRICE) / CURRENT_PRICE * 100);
+  
+  const rows = prices.map(price => {
+    const i = Math.max(0, price - p.k);
+    const tv = i * 100 * p.q;
+    const pl = tv - cost;
+    return `<div class="tr"><div class="v tnum">$${price.toFixed(2)}</div><div class="m- tnum">$${i.toFixed(2)}</div><div class="m- tnum">$${tv.toLocaleString("en-US",{maximumFractionDigits:0})}</div><div class="pl tnum ${plCls(pl)}">${fmt(pl, true)}</div></div>`;
+  }).join("");
+  
+  $("#p-hl").innerHTML = `
+    <div class="tip"><strong>Vasthouden tot expiratie:</strong> waarde = intrinsiek. Geen tijdwaarde meer.</div>
+    <div class="sg">
+      <div class="sb"><div class="sb-l">Dagen tot exp</div><div class="sb-v lg tnum">${dte}</div></div>
+      <div class="sb"><div class="sb-l">Max verlies</div><div class="sb-v tnum loss">${fmt(-cost)}</div></div>
+    </div>
+    <div class="sh" style="margin:14px 0 8px"><h2 style="font-size:10px">Hold tot ${p.exp}</h2></div>
+    <div class="tbl">
+      <div class="tr h"><div>Prijs</div><div>Per contr</div><div>Totaal</div><div style="text-align:right">P/L</div></div>
+      ${rows}
+    </div>
+    <div class="rec"><div class="rec-l">Breakeven analyse</div><div class="rec-t">Breakeven: <strong>$${be.toFixed(2)}</strong><br>${need > 0 ? `Benodigde move vanaf $${CURRENT_PRICE}: <strong>+${need.toFixed(1)}%</strong>` : `Al boven breakeven`}</div></div>
+  `;
+}
+
+function renderRoll() {
+  const p = cPos;
+  const val = posValueNow(p);
+  const netPL = val - posCost(p);
+  const rolls = buildRolls(p);
+  
+  let body = "";
+  if (rolls.length === 0) {
+    body = `<div class="tip">Geen zinvolle roll-opties voor deze positie.</div>`;
+  } else {
+    body = rolls.map(r => `
+      <div class="rc">
+        <div class="rc-h"><span>${r.name}</span><span class="rc-tag">${r.type}</span></div>
+        <div class="rc-d">${r.desc}</div>
+        <div class="rc-s">
+          <div class="rc-stat"><div class="rc-stat-l">Nieuwe pos</div><div class="rc-stat-v tnum">${r.nq}× $${r.nk}C</div></div>
+          <div class="rc-stat"><div class="rc-stat-l">Breakeven</div><div class="rc-stat-v tnum">$${r.be.toFixed(2)}</div></div>
+          <div class="rc-stat"><div class="rc-stat-l">@$8</div><div class="rc-stat-v tnum ${plCls(r.pl8)}">${fmt(r.pl8, true)}</div></div>
+        </div>
+      </div>
+    `).join("");
+  }
+  
+  $("#p-rl").innerHTML = `
+    <div class="tip"><strong>Doorrollen:</strong> huidige sluit, opbrengst nieuwe. Prijzen <em>indicatief</em>.</div>
+    <div class="sg">
+      <div class="sb"><div class="sb-l">Opbrengst nu</div><div class="sb-v tnum">$${Math.round(val).toLocaleString("en-US")}</div></div>
+      <div class="sb"><div class="sb-l">P/L bij sluit</div><div class="sb-v tnum ${plCls(netPL)}">${fmt(netPL)}</div></div>
+    </div>
+    <div class="sh" style="margin:14px 0 8px"><h2 style="font-size:10px">Roll-scenarios</h2></div>
+    ${body}
+    <div class="rec"><div class="rec-l">Roll-regels</div><div class="rec-t">
+      <strong>Verder weg</strong>: bij catalyst-delay.<br>
+      <strong>Hogere strike</strong>: na run-up, winst klikken + upside.<br>
+      <strong>Lagere strike</strong>: alleen bij ongewijzigde thesis.
+    </div></div>
+  `;
+}
+
+function buildRolls(p) {
+  const val = posValueNow(p);
+  const out = [];
+  
+  const further = {
+    JUN: [["SEP 18 '26", 2.5], ["JAN 15 '27", 4.0]],
+    SEP: [["JAN 15 '27", 1.8]],
+    JAN: []
+  };
+  
+  (further[p.ex] || []).forEach(([name, mult]) => {
+    const est = p.m * mult;
+    const nq = Math.floor(val / (est * 100));
+    if (nq === 0) return;
+    out.push({
+      name: `Roll naar ${name} $${p.k}C`,
+      type: "Verder weg",
+      desc: `Zelfde strike, meer tijd. Geschat ~$${est.toFixed(2)} (×${mult}). Voor catalyst-delay.`,
+      nq, nk: p.k, be: p.k + est,
+      pl8: nq * (Math.max(0, 8 - p.k) - est) * 100
+    });
+  });
+  
+  if (p.k < 8 && p.m > 0.05) {
+    const nk = p.k + 2;
+    const ratio = Math.max(0.3, (p.k / nk) * 0.7);
+    const est = p.m * ratio;
+    const nq = Math.floor(val / (est * 100));
+    if (nq > 0 && est > 0.01) {
+      out.push({
+        name: `Roll up naar $${nk}C`,
+        type: "Hogere strike",
+        desc: `Zelfde expiratie. Meer contracten voor zelfde kapitaal. Na run-up.`,
+        nq, nk, be: nk + est,
+        pl8: nq * (Math.max(0, 8 - nk) - est) * 100
       });
     }
-    return alerts;
-  } catch { return []; }
-}
-
-async function loadPositions(ticker) {
-  try {
-    const r = await fetch(`/api/data?type=positions&ticker=${ticker}`, { cache: 'no-store' });
-    const d = await r.json();
-    posData[ticker] = d.data || [];
-    return posData[ticker];
-  } catch { return []; }
-}
-
-// ===== TOP-TRADER ENGINE (simpel, rule-based) =====
-function computeAdvice(ticker, price, alerts, positions) {
-  if (!price) return { label: 'WAIT', text: 'Wachten op live prijsdata', confidence: 0 };
-  
-  const recentAlerts = alerts.filter(a => a.ticker === ticker && Date.now() - new Date(a.received_at).getTime() < 24*3600000);
-  const hasPositions = positions && positions.length > 0;
-  const moveUp = price.changePercent > 5;
-  const moveDown = price.changePercent < -5;
-  
-  // Rule 1: recent SELL alert + price drop = act now
-  if (recentAlerts.some(a => /sell|verkoop|trim|exit/i.test(a.alert_name)) && moveDown) {
-    return { label: 'SELL', text: `Recente sell-alert + ${price.changePercent.toFixed(1)}% daling. Trigger conditie geraakt.`, confidence: 80 };
   }
   
-  // Rule 2: recent BUY alert + price up = ride momentum
-  if (recentAlerts.some(a => /buy|koop|entry/i.test(a.alert_name)) && moveUp) {
-    return { label: 'BUY', text: `Buy-alert getriggered + ${price.changePercent.toFixed(1)}% momentum.`, confidence: 70 };
+  if (p.k > 4 && p.m < 0.25 && p.m > 0) {
+    const nk = p.k - 1;
+    const est = p.m * 2.5;
+    const nq = Math.floor(val / (est * 100));
+    if (nq >= 1) {
+      out.push({
+        name: `Roll down naar $${nk}C`,
+        type: "Lagere strike",
+        desc: `Hogere delta, lagere breakeven. Minder hefboom.`,
+        nq, nk, be: nk + est,
+        pl8: nq * (Math.max(0, 8 - nk) - est) * 100
+      });
+    }
   }
   
-  // Rule 3: big up move zonder alert = take profits if positions
-  if (moveUp && hasPositions) {
-    return { label: 'HOLD', text: `+${price.changePercent.toFixed(1)}% rally. Geen sell-alert getriggered, posities aanhouden.`, confidence: 60 };
-  }
-  
-  // Rule 4: big down without buy alert = wait
-  if (moveDown) {
-    return { label: 'WAIT', text: `${price.changePercent.toFixed(1)}% daling. Geen entry-trigger, wacht op stabilisatie.`, confidence: 50 };
-  }
-  
-  // Default: hold met posities, wait zonder
-  if (hasPositions) {
-    return { label: 'HOLD', text: `Stabiele beweging. Posities aanhouden, wacht op alert-trigger.`, confidence: 60 };
-  }
-  return { label: 'WAIT', text: 'Geen actieve positie of trigger.', confidence: 50 };
+  return out;
 }
 
-// ===== RENDER =====
-function renderPrice() {
-  const p = priceData[activeTicker];
-  $('#ticker-name').textContent = activeTicker;
-  if (!p) {
-    $('#ticker-price').textContent = '—';
-    $('#ticker-change').textContent = 'Geen data';
-    $('#ticker-meta').textContent = '';
-    return;
-  }
-  $('#ticker-price').textContent = `$${p.price.toFixed(2)}`;
-  const sign = p.change >= 0 ? '+' : '';
-  $('#ticker-change').textContent = `${sign}${p.change.toFixed(2)} (${sign}${p.changePercent.toFixed(2)}%)`;
-  $('#ticker-change').className = 'pc-ch tnum ' + (p.change >= 0 ? 'up' : 'down');
-  $('#ticker-meta').textContent = `${p.marketState || ''} · ${new Date(p.timestamp).toLocaleTimeString('nl-NL')}`;
-}
-
-function renderAdvice() {
-  const a = computeAdvice(activeTicker, priceData[activeTicker], alerts, posData[activeTicker]);
-  $('#adv-badge').textContent = a.label;
-  $('#adv-badge').className = 'adv-badge ' + a.label.toLowerCase();
-  $('#adv-text').textContent = a.text;
-  $('#adv-conf').textContent = `Confidence: ${a.confidence}% (rule-based v0)`;
-}
-
-function renderAlerts() {
-  const tickerAlerts = alerts.filter(a => a.ticker === activeTicker);
-  const list = $('#alerts-list');
-  if (!tickerAlerts.length) {
-    list.innerHTML = `<div class="empty">Geen alerts voor ${activeTicker}. Setup TV-webhook om alerts te ontvangen.</div>`;
-    return;
-  }
-  const now = Date.now();
-  const html = tickerAlerts.slice(0, 10).map(a => {
-    const ageMin = Math.round((now - new Date(a.received_at).getTime()) / 60000);
-    const fresh = ageMin < 60 ? 'fresh' : '';
-    let timeLabel = ageMin < 1 ? 'net nu' : ageMin < 60 ? `${ageMin}m` : ageMin < 1440 ? `${Math.round(ageMin/60)}u` : new Date(a.received_at).toLocaleDateString('nl-NL', {day:'numeric', month:'short'});
-    return `<div class="alert ${fresh}">
-      <div class="alert-l">
-        <div class="alert-name">${escapeHtml(a.alert_name)}</div>
-        <div class="alert-meta">${a.ticker}</div>
-      </div>
-      <div class="alert-r">
-        <div class="alert-price">$${a.price.toFixed(2)}</div>
-        <div class="alert-time">${timeLabel}</div>
-      </div>
-    </div>`;
-  }).join('');
-  list.innerHTML = `<div class="alerts-list">${html}</div>`;
-}
-
-function renderPositions() {
-  const positions = posData[activeTicker] || [];
-  const list = $('#positions');
-  if (!positions.length) {
-    list.innerHTML = `<div class="empty">Geen posities geconfigureerd voor ${activeTicker}.<br>Voeg toe in Notion → Stock Positions database (Ticker = ${activeTicker}).</div>`;
-    return;
-  }
-  const html = positions.map(p => `
-    <div class="pos">
-      <div class="pos-l">
-        <div class="pos-n">${escapeHtml(p.Type || p.Naam || 'Position')}</div>
-        <div class="pos-m">Qty: ${p.Qty || '-'} · Cost: $${p.CostBasis || '-'}</div>
-      </div>
-      <div class="pos-r">${p.Account || ''}</div>
-    </div>
-  `).join('');
-  list.innerHTML = `<div class="positions-grid">${html}</div>`;
-}
-
-function renderTVChart() {
-  const container = $('#tv-chart-container');
-  container.innerHTML = `<div id="tv-${activeTicker}" style="height:100%"></div>`;
-  if (window.TradingView) {
-    new TradingView.widget({
-      autosize: true,
-      symbol: `NASDAQ:${activeTicker}`,
-      interval: 'D',
-      theme: 'dark',
-      style: '1',
-      locale: 'nl',
-      enable_publishing: false,
-      allow_symbol_change: false,
-      container_id: `tv-${activeTicker}`,
-      hide_side_toolbar: true,
-      hide_top_toolbar: false,
-      backgroundColor: '#161b24',
-      gridColor: 'rgba(255,255,255,0.03)'
-    });
-  } else {
-    container.innerHTML = '<div class="empty">TradingView script nog niet geladen</div>';
-  }
-}
-
-function escapeHtml(s) {
-  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-}
-
-// ===== ORCHESTRATION =====
-async function loadAll() {
-  $('#refresh-info').textContent = 'Laden...';
-  await Promise.all([
-    loadPrice(activeTicker),
-    loadAlerts(),
-    loadPositions(activeTicker)
-  ]);
-  // Also fetch prices for OTHER tabs in background (for tab indicator)
-  tickers.filter(t => t !== activeTicker).forEach(t => {
-    if (!priceData[t]) loadPrice(t).then(() => renderTabs());
+function initNotes() {
+  const el = $("#note");
+  try { const s = localStorage.getItem("alt_note"); if (s) el.value = s; } catch(e) {}
+  const grow = () => { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; };
+  grow();
+  el.addEventListener("input", () => {
+    try { localStorage.setItem("alt_note", el.value); } catch(e) {}
+    grow();
   });
-  renderPrice();
-  renderAdvice();
-  renderAlerts();
-  renderPositions();
-  renderTVChart();
-  renderTabs();
-  $('#refresh-info').textContent = `Bijgewerkt ${new Date().toLocaleTimeString('nl-NL')}`;
 }
 
-// ===== EVENTS =====
-$('#add-close').addEventListener('click', () => $('#add-modal').classList.remove('open'));
-$('#add-modal').addEventListener('click', e => { if (e.target.id === 'add-modal') $('#add-modal').classList.remove('open'); });
-$('#add-save').addEventListener('click', () => {
-  const t = $('#add-input').value;
-  if (t) {
-    addTicker(t);
-    $('#add-input').value = '';
-    $('#add-modal').classList.remove('open');
-  }
+document.addEventListener("DOMContentLoaded", () => {
+  renderCats();
+  renderScn();
+  renderPSum();
+  renderSnaps();
+  initNotes();
+  
+  $("#td").textContent = TODAY.toLocaleDateString("nl-NL", {day:"numeric", month:"long", year:"numeric"});
+  $("#bp").textContent = `$${CURRENT_PRICE.toFixed(2)}`;
+  
+  $$(".tab").forEach(t => t.addEventListener("click", () => {
+    $$(".tab").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    updateSim();
+  }));
+  
+  $("#sl").addEventListener("input", updateSim);
+  $("#mclose").addEventListener("click", closeDetail);
+  $("#mbd").addEventListener("click", closeDetail);
+  
+  $$(".mt").forEach(t => t.addEventListener("click", () => {
+    $$(".mt").forEach(x => x.classList.remove("active"));
+    $$(".mp").forEach(p => p.classList.remove("active"));
+    t.classList.add("active");
+    $("#p-" + t.dataset.panel).classList.add("active");
+  }));
+  
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeDetail(); });
+  
+  updateSim();
 });
-
-// Auto-refresh every 60s
-setInterval(loadAll, 60000);
-
-// Initial load NU (niet wachten op TV script)
-loadAll();
-
-// Load TV widget script (best effort)
-const tvScript = document.createElement('script');
-tvScript.src = 'https://s3.tradingview.com/tv.js';
-tvScript.onload = () => renderTVChart(); // re-render chart with widget when ready
-tvScript.onerror = () => {};
-document.head.appendChild(tvScript);
-
-// Service worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js').catch(() => {}));
-}
 </script>
 </body>
 </html>
