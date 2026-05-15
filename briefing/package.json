@@ -1,0 +1,10 @@
+{
+  "name": "dca-briefing-pwa",
+  "version": "1.0.0",
+  "description": "Persoonlijke ochtendbriefing PWA voor Jop Delemarre",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
+}

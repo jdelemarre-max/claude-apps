@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B2C5A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Briefing">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Briefing</title>
+<style>
+  :root {
+    --bg: #FAF7F0;
+    --text: #0F1C3F;
+    --primary: #1B2C5A;
+    --accent: #C9A227;
+    --muted: #6B7280;
+    --card: #FFFFFF;
+    --border: #E5E0D3;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  body {
+    padding: env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 16px 4px 24px;
+  }
+
+  .header .date {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  .header .refresh {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-family: inherit;
+  }
+  .header .refresh:active { color: var(--primary); }
+
+  .quote-card {
+    background: var(--card);
+    border-left: 4px solid var(--accent);
+    padding: 24px 22px;
+    margin-bottom: 28px;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 0 1px 3px rgba(15, 28, 63, 0.06);
+  }
+
+  .quote {
+    font-family: 'Merriweather', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.55;
+    font-style: italic;
+    color: var(--primary);
+    min-height: 28px;
+  }
+
+  .quote.skeleton {
+    background: linear-gradient(90deg, #EFEAD8 0%, #F7F4E8 50%, #EFEAD8 100%);
+    background-size: 200% 100%;
+    animation: pulse 1.5s ease-in-out infinite;
+    border-radius: 4px;
+    color: transparent;
+    min-height: 56px;
+  }
+
+  @keyframes pulse {
+    0%, 100% { background-position: 200% 0; }
+    50% { background-position: -200% 0; }
+  }
+
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .task {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: transform 0.08s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .task:active {
+    transform: scale(0.985);
+    background: #FCFAF5;
+  }
+
+  .priority-dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 7px;
+    background: var(--muted);
+  }
+  .priority-Hoog { background: #DC2626; }
+  .priority-Normaal { background: var(--accent); }
+  .priority-Laag { background: #9CA3AF; }
+
+  .task-body { flex: 1; min-width: 0; }
+
+  .task-title {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .task-meta {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .task-meta .project {
+    background: #F0EBD9;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  .task.skeleton {
+    height: 64px;
+    background: linear-gradient(90deg, #F4F0E0 0%, #FAF7EC 50%, #F4F0E0 100%);
+    background-size: 200% 100%;
+    animation: pulse 1.5s ease-in-out infinite;
+    border-color: transparent;
+  }
+  .task.skeleton > * { visibility: hidden; }
+
+  .empty, .error {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .error {
+    border-color: #FCA5A5;
+    background: #FEF2F2;
+    color: #991B1B;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 28px 0 12px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="date" id="date"></div>
+    <button class="refresh" id="refresh" aria-label="Ververs briefing">↻ ververs</button>
+  </div>
+
+  <div class="quote-card">
+    <div class="quote skeleton" id="quote">Quote laden...</div>
+  </div>
+
+  <div class="section-label">Top 3 — 🔴 NU</div>
+  <div class="tasks" id="tasks">
+    <div class="task skeleton"><div class="priority-dot"></div><div class="task-body"><div class="task-title">&nbsp;</div></div></div>
+    <div class="task skeleton"><div class="priority-dot"></div><div class="task-body"><div class="task-title">&nbsp;</div></div></div>
+    <div class="task skeleton"><div class="priority-dot"></div><div class="task-body"><div class="task-title">&nbsp;</div></div></div>
+  </div>
+
+  <div class="footer" id="footer"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
