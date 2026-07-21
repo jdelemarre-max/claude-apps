@@ -1,0 +1,11 @@
+﻿credentials.json
+client_secret*.json
+token.json
+token_modify.json
+*token*.json
+.env
+__pycache__/
+.venv/
+node_modules/
+*.sqlite
+*.db
