@@ -1,11 +1,20 @@
 ﻿credentials.json
 client_secret*.json
+gcp-oauth*.json
 token.json
 token_modify.json
 *token*.json
 .env
+.env.*
+!.env.example
 __pycache__/
 .venv/
 node_modules/
+.netlify/
 *.sqlite
 *.db
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
