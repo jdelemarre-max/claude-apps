@@ -1,0 +1,47 @@
+{
+  "today": "2026-08-05",
+  "currentPrice": 3.02,
+  "basis": 3.50,
+  "shares": 23000,
+  "cats": [
+    ["RECLAIM AUD topline ✅", "2026-07-28", "", "data", "Primary (heavy drinking days, p=0.0014) + 2 FDA-erkende registrational secundairen (WHO-RDL, zero-HDD) gehaald. Koers +11% intraday, sloot -4% (sell-the-news/warrant-cap). Catalyst is CONSUMED."],
+    ["PERFORMA Ph3 MASH gestart ✅", "2026-08-03", "", "regulatory", "Officieel gestart (PR 3 aug 08:00 EDT). Procescatalyst, geen re-rate op zichzelf (Madrigal-precedent). 52wk-readout 2029."],
+    ["Q2 earnings", "2026-08-10", "crit", "earnings", "Bevestigd 10 aug 2026 (niet 11 aug). Historisch non-event voor koers (Q1: -2.6%). Enige resterende event vóór SEP-expiry."],
+    ["SEP opties exp", "2026-09-18", "soon", "expiry", "SEP 4C×25/7C×16 verlopen. RECLAIM al binnen — dit is nu zuivere earnings/momentum-vol trade, geen readout-gok meer."],
+    ["EOP2 FDA-meeting AUD", "2026-10-15", "", "regulatory", "Datum ONBEKEND — placeholder medio okt. Aangevraagd na RECLAIM. Bepaalt Phase 3 AUD-pad + financiering (non-dilutive taal management)."],
+    ["Deal-window Q4'26-Q2'27", "2026-10-01", "", "deal", "45-55% kans concrete partner-betrokkenheid (Sanofi sterkste kandidaat/Garijo-window, Novo nieuw urgent motief, Roche voor EU-licentie, nieuw: Pfizer)."],
+    ["AASLD congres", "2026-11-01", "", "conference", "November 2026 — mogelijk BD-window."],
+    ["RESTORE ALD / Durso vesting", "2026-12-01", "", "data", "RESTORE ALD topline richting Q4/2027. Durso eerste equity-vesting-cliff 1 dec 2026 (build-CEO thesis: comp straft quick-exit)."],
+    ["JAN27 opties exp", "2027-01-15", "", "expiry", "JAN 3C/3.5C/4C/5C/7C/10C verlopen — enige expiry zonder timing-risico, dekt volledige deal-window."]
+  ],
+  "pos": [
+    {"id":"jan3c","exp":"JAN 15 '27","ex":"JAN","d":"2027-01-15","k":3,"q":20,"c":0.57,"m":0.62},
+    {"id":"jan35c","exp":"JAN 15 '27","ex":"JAN","d":"2027-01-15","k":3.5,"q":10,"c":0.50,"m":0.45},
+    {"id":"jan4c","exp":"JAN 15 '27","ex":"JAN","d":"2027-01-15","k":4,"q":60,"c":0.40,"m":0.34},
+    {"id":"jan5c","exp":"JAN 15 '27","ex":"JAN","d":"2027-01-15","k":5,"q":20,"c":0.25,"m":0.20},
+    {"id":"jan7c","exp":"JAN 15 '27","ex":"JAN","d":"2027-01-15","k":7,"q":31,"c":1.99,"m":0.09},
+    {"id":"jan10c","exp":"JAN 15 '27","ex":"JAN","d":"2027-01-15","k":10,"q":1,"c":1.04,"m":0.03},
+    {"id":"sep4c","exp":"SEP 18 '26","ex":"SEP","d":"2026-09-18","k":4,"q":25,"c":0.63,"m":0.07},
+    {"id":"sep7c","exp":"SEP 18 '26","ex":"SEP","d":"2026-09-18","k":7,"q":16,"c":0.50,"m":0.01}
+  ],
+  "scn": [
+    {"p":0.325,"d":"Geen deal, Ph3 solo drift","t":"$3-5 nu / $20-40 in 2029","mid":4.00,"window":"pre-jan","note":"Base rate MASH-sector: NORM, geen bearish signaal (Akero/89bio/Madrigal precedent)"},
+    {"p":0.225,"d":"EU-licensing (Roche/Sanofi/Novo)","t":"$5-7","mid":6.00,"window":"pre-jan","note":"Non-dilutieve route, +70-120%"},
+    {"p":0.175,"d":"Full acquisition","t":"$25-40","mid":32.50,"window":"pre-jan","note":"M&A-comps 39-109% premie (Cidara/Avidity/Dynavax/Amicus), niet 400-900%"},
+    {"p":0.175,"d":"Standalone build (Madrigal-pad)","t":"$8-15 mid-term","mid":11.50,"window":"pre-jan","note":"EMA standalone mogelijk, build-CEO thesis 70-75%"},
+    {"p":0.065,"d":"Bidding war (Sanofi+Novo+Roche)","t":"$50-80","mid":65,"window":"pre-jan","note":"Alle 3 kandidaten hebben nu acute pipeline-druk"}
+  ],
+  "so": [
+    {"t":"$4,00 = liquiditeitsprobleem","r":"~15-20M aandelen april-kopers (@$3,00) moeten geabsorbeerd worden, 8-12 dagen netto-koopdruk","tr":4.00},
+    {"t":"$5,00 = waarderingsprobleem","r":"~$1,0 mrd marktwaarde vereist een model (partnership/Ph3-ontwerp), geen sentiment","tr":5.00},
+    {"t":"$6,00+ = structureel probleem","r":"~$1,65 mrd FD, warrants moeten geneutraliseerd — realistisch alleen bij overname","tr":6.00},
+    {"t":"Afbouwen JAN 7C/10C mag","r":"Op elke serieuze kracht — vereist >2x, is de M&A-headline-gok, niet de these","tr":8.00},
+    {"t":"SEP-boek: geen catalyst meer","r":"Na Q2-earnings 10 aug is er geen readout meer vóór 18 sep-expiry — puur liquiditeitsvenster op elke pop","tr":5.00}
+  ],
+  "snaps": [
+    {"label":"Huidig","price":3.02,"sub":"Onder $3 warrant-cap-zone","badge":"NU"},
+    {"label":"EU-licensing","price":6.00,"sub":"Non-dilutief, +70-120%","badge":"22.5%"},
+    {"label":"Standalone build","price":11.50,"sub":"Madrigal-pad, mid-term","badge":"17.5%"},
+    {"label":"Full acquisition","price":32.50,"sub":"39-109% M&A-premie","badge":"17.5%"}
+  ]
+}
