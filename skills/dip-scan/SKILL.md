@@ -1,8 +1,21 @@
-# Dip-scan SKILL.md — aanvulling (merge in bestaande SKILL.md)
+---
+name: dip-scan
+description: Dagelijkse dip-scan over de watchlist — mean-reversion dip-buy-signalen zoeken, valideren en pas daarna live zetten. Gebruik deze skill bij het draaien van de dagelijkse sweep, bij het toevoegen van een nieuwe ticker of regel aan de watchlist, en bij elke vraag of een trading-regel "echt" is. Elke nieuwe regel moet verplicht door de validatie-gauntlet in validate.py voordat hij in watchlist.txt mag.
+---
 
-> Bron: 9.000-backtests-analyse (Brendan). Kernles: één backtest is waardeloos —
-> 44% van 'sterke' strategieën faalt out-of-sample. Mean-reversion is de enige
-> familie die breed stand-alone overleeft.
+# Dip-scan
+
+Dagelijkse sweep over de watchlist op mean-reversion dip-buy-signalen, met een
+verplichte validatiepoort ervoor.
+
+De kernregel: **de watchlist is een gevalideerde set, geen verzamelbak.** Een
+ticker of regel komt er pas in nadat hij door `validate.Gauntlet` is gekomen.
+
+## Wanneer gebruik je dit
+
+- de dagelijkse sweep draaien over de bestaande watchlist
+- een nieuwe naam of regel overwegen voor de watchlist
+- beoordelen of een backtest-resultaat een echte edge is of overfit
 
 ## Edge-hiërarchie (waar de dip-scan op staat)
 
@@ -61,3 +74,34 @@ Regel: **faalt één filter → regel valt af.** Geen "maar in dit ene pad werkt
 - Nieuwe naam → eerst gauntlet op de historie, dan pas in `watchlist.txt`.
 - Log per regel het verdict (Sharpe/maxDD/overfit/bootstrap) bij de regel, zodat
   je later ziet wáárom iets erin staat.
+
+## API van validate.py
+
+Een strategie is een functie `strategy(prices: pd.Series, **params) -> pd.Series`
+die posities in `[-1, 1]` teruggeeft, geïndexeerd als `prices`. Long-only
+mean-reversion = posities in `{0, 1}`.
+
+| Functie | Doet |
+|---|---|
+| `Gauntlet(...).run(prices, strategy, param_grid)` | volledige poort → `Verdict` |
+| `walk_forward(prices, strategy, param_grid, ...)` | tunen op oud, scoren op ongezien |
+| `bootstrap(returns, n=500, seed=7)` | is de edge padafhankelijk geluk? |
+| `regime_series(prices, lookback=40, hmm=False)` | chop vs. trend, voor de regime-gate |
+| `mean_reversion_rsi(prices, period, buy, sell)` | referentie-strategie (ruggengraat) |
+| `trend_ma_cross(prices, fast, slow)` | referentie-trendregel (alleen regime-gated) |
+| `sharpe` · `max_drawdown` · `n_trades` · `strategy_returns` | losse statistieken |
+
+Posities werken op de **volgende** bar (`strategy_returns` shift't met 1), dus
+er zit geen look-ahead in de resultaten.
+
+Afhankelijkheden: `numpy`, `pandas`. `hmmlearn` is optioneel voor regime-detectie;
+zonder die package valt `regime_series()` terug op trend-sterkte/vol.
+
+## Herkomst
+
+Bron: 9.000-backtests-analyse (Brendan). Kernles: één backtest is waardeloos —
+44% van 'sterke' strategieën faalt out-of-sample. Mean-reversion is de enige
+familie die breed stand-alone overleeft.
+
+Dezelfde regels staan als staand projectbeleid in
+[`trading-monitor/CLAUDE.md`](../../trading-monitor/CLAUDE.md).
