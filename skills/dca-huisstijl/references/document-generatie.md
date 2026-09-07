@@ -13,7 +13,7 @@ KOP_FONT    = "Merriweather"
 BODY_FONT   = "Inter"
 ```
 
-Fonts zijn webfonts; als Merriweather/Inter niet op het systeem staan, valt Word terug op een serif (koppen) en sans-serif (body). Voor een PDF waarin de fonts gegarandeerd kloppen, embed je ze of render je via HTML→PDF met de Google Fonts ingeladen.
+Voor de PDF- en HTML-tak liggen Merriweather en Inter als statische TTF's in `fonts/` en worden ze via `@font-face` ingeladen — geen Google Fonts, geen netwerk, geen systeeminstallatie nodig. De DOCX-tak kan fonts niet embedden: staan Merriweather/Inter niet op het systeem, dan valt Word terug op een serif (koppen) en sans-serif (body).
 
 ## DOCX — snelste route
 
@@ -85,9 +85,22 @@ oranje" wint van de standaard-RAG-kleur.
 
 ### Fonts
 
-Merriweather/Inter zijn webfonts en staan zelden lokaal. De stack valt terug
-op Lora/DejaVu Serif (koppen) en DejaVu Sans (body). Beide dekken Cyrillisch;
-dat is bewust — een gewone systeemserif brak eerder op niet-Latijnse tekens.
+Merriweather en Inter liggen als statische TTF's in `fonts/` en worden via
+`@font-face` in de CSS ingeladen (absolute `file://`-URL's; wkhtmltopdf krijgt
+daarvoor `--enable-local-file-access`). Zes faces: Merriweather 400/700/900 en
+Inter 400/600/700.
+
+Regenereren na een font-update:
+
+```bash
+python scripts/pin_dca_fonts.py fonts      # vereist: pip install fonttools
+```
+
+Ontbreekt `fonts/`, dan levert `font_face_css()` een lege string op en valt de
+stack terug op Lora/DejaVu Serif (koppen) en DejaVu Sans (body). Beide dekken
+Cyrillisch; dat is bewust — een gewone systeemserif brak eerder op
+niet-Latijnse tekens. De fallback blijft dus staan als vangnet, maar is niet
+langer het normale pad.
 
 ### Kolommen naast elkaar
 

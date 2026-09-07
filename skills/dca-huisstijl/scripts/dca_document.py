@@ -31,14 +31,16 @@ MARKDOWN-SUBSET
   <!--pb-->                pagina-einde
   **vet**  *cursief*  `code`  [tekst](url)  ==goud gemarkeerd==
 
-Fonts: Merriweather/Inter zijn webfonts en zitten zelden lokaal.
-Het script valt terug op Lora/DejaVu Serif (koppen) en DejaVu Sans (body).
-Beide dekken Cyrillisch en Grieks; dat is bewust, want Merriweather-fallback
-op een systeemserif brak eerder op niet-Latijnse tekens.
+Fonts: Merriweather/Inter komen uit ../fonts als statische TTF's (gepind met
+scripts/pin_dca_fonts.py) en worden via @font-face in de CSS ingeladen.
+Ontbreekt die map, dan valt het script terug op Lora/DejaVu Serif (koppen) en
+DejaVu Sans (body). Beide dekken Cyrillisch en Grieks; dat is bewust, want
+Merriweather-fallback op een systeemserif brak eerder op niet-Latijnse tekens.
 """
 import argparse
 import html as _html
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -54,6 +56,42 @@ KOP_FONT = "Merriweather"
 BODY_FONT = "Inter"
 KOP_STACK = '"Merriweather", "Lora", "DejaVu Serif", Georgia, serif'
 BODY_STACK = '"Inter", "DejaVu Sans", Helvetica, Arial, sans-serif'
+
+# ---------------------------------------------------------------- fonts
+# Statische TTF's naast de skill (../fonts), gepind met pin_dca_fonts.py.
+# wkhtmltopdf krijgt ze via @font-face met absolute file://-URL's; daarvoor
+# staat --enable-local-file-access al in build_pdf(). Ontbreekt een bestand,
+# dan komt die face er niet in en doet de fallback-stack hierboven zijn werk.
+FONTS_DIR = os.path.normpath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "fonts"))
+
+_FACES = (
+    (KOP_FONT, "Merriweather-Regular.ttf", 400),
+    (KOP_FONT, "Merriweather-Bold.ttf", 700),
+    (KOP_FONT, "Merriweather-Black.ttf", 900),
+    (BODY_FONT, "Inter-Regular.ttf", 400),
+    (BODY_FONT, "Inter-SemiBold.ttf", 600),
+    (BODY_FONT, "Inter-Bold.ttf", 700),
+)
+
+
+def font_face_css(fonts_dir=FONTS_DIR):
+    """@font-face-regels voor de gepinde TTF's. Lege string = geen fonts
+    gevonden; de CSS valt dan terug op KOP_STACK/BODY_STACK."""
+    regels = []
+    for familie, bestand, gewicht in _FACES:
+        pad = os.path.join(fonts_dir, bestand)
+        if not os.path.isfile(pad):
+            continue
+        url = pathlib.Path(pad).as_uri()
+        regels.append(
+            f'@font-face {{ font-family:"{familie}"; '
+            f'src:url("{url}") format("truetype"); '
+            f'font-weight:{gewicht}; font-style:normal; }}')
+    return "\n".join(regels)
+
+
+FONT_FACE_CSS = font_face_css()
 
 
 def _hex_to_rgb(h):
@@ -232,6 +270,7 @@ def md_to_html(md):
 
 # ---------------------------------------------------------------- css
 CSS = f"""
+{FONT_FACE_CSS}
 @page {{ size: A4; margin: 16mm 14mm; }}
 body {{ background:#{CREAM}; color:#1a1a1a; font-family:{BODY_STACK};
         font-size:9.6pt; line-height:1.45; margin:0; }}
