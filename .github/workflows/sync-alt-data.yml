@@ -1,0 +1,44 @@
+name: Sync ALT dashboard data
+
+# Haalt het JSON-blok uit de Notion-pagina "ALT Dashboard Data (auto-sync bron)"
+# en commit het als trading-monitor/data.json. Netlify deployt daarna vanzelf.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-alt-data
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Notion → data.json
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_ALT_DATA_PAGE: ${{ vars.NOTION_ALT_DATA_PAGE }}
+        run: python tools/alt-sync/sync_alt_data.py
+
+      - name: Commit bij wijziging
+        run: |
+          if git diff --quiet -- trading-monitor/data.json; then
+            echo "geen wijziging"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add trading-monitor/data.json
+          git commit -m "sync: ALT dashboard data uit Notion"
+          git push

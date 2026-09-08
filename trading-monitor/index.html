@@ -316,14 +316,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;background:var(--a);b
 
 <script>
 // ===== DATA =====
-const TODAY = new Date(2026, 4, 11);
-const CURRENT_PRICE = 3.09; // 11 mei 07:30 IBKR pre-market
-const BASIS = 3.50; // historisch cost basis voor aandelen P/L
-const SHARES = 23000;
+let TODAY = new Date(2026, 4, 11);
+let CURRENT_PRICE = 3.09; // 11 mei 07:30 IBKR pre-market
+let BASIS = 3.50; // historisch cost basis voor aandelen P/L
+let SHARES = 23000;
 
 // Catalysts met type en details (type bepaalt kleur/icon)
 // type: "earnings" | "data" | "regulatory" | "expiry" | "deal" | "conference" | "ownership"
-const CATS = [
+let CATS = [
   ["Smart money 13Gs", new Date(2026, 4, 1), "soon", "ownership", "TCG Crossover (20M, 9.8%) + RA Capital (13M, 6.5%) + Deep Track (19.4M, 9.99%) = 52.4M shares (~70% offering allocatie)"],
   ["Q1 earnings", new Date(2026, 4, 8), "crit", "earnings", "Q1 2026 results call - mogelijke deal-update of Phase 3 timing"],
   ["EASL congres", new Date(2026, 4, 27), "soon", "conference", "EASL Barcelona 27-30 mei - BD-window, potentiele partnership talks"],
@@ -338,7 +338,7 @@ const CATS = [
   ["Phase 3 MASH start", new Date(2027, 1, 28), "", "regulatory", "1800 patients, 52-week biopsy endpoint"]
 ];
 
-const POS = [
+let POS = [
   {id:"may3c", exp:"MAY 15 '26", ex:"MAY", d:new Date(2026,4,15), k:3,   q:15,  c:0.12, m:0.20},
   {id:"jun053_5c", exp:"JUN 05 '26", ex:"JUN05", d:new Date(2026,5,5), k:3.5, q:40,  c:0.16, m:0.12},
   {id:"jun4c", exp:"JUN 18 '26", ex:"JUN", d:new Date(2026,5,18), k:4,  q:100, c:0.28, m:0.08},
@@ -355,7 +355,7 @@ const POS = [
 // Scenario's met TIJDSVENSTER - welke opties zijn actief
 // window: "pre-jun" = vóór 18 juni, "pre-sep" = na JUN exp, "pre-jan" = na SEP exp
 // Probabilities per master doc v4 (1 mei 2026): Roche 30%, Sanofi 30%, geen deal 15%, bidding war 20%, andere 5%
-const SCN = [
+let SCN = [
   {p:0.15, d:"Geen deal, drift sub-$3.50", t:"$2.80-$3.50", mid:3.15, window:"pre-jun", note:"Warrant-cap dominant, status quo"},
   {p:0.05, d:"EASL pop (geen deal)", t:"$4.00-$5.00", mid:4.50, window:"pre-jun", note:"Pre-EASL speculation, sentiment-rally"},
   {p:0.05, d:"Roche vroege licensing", t:"$5-7", mid:6.00, window:"pre-sep", note:"Zeldzaam: pre-RECLAIM aankondiging"},
@@ -364,7 +364,7 @@ const SCN = [
   {p:0.20, d:"Bidding war Roche+Sanofi", t:"$65-95", mid:80, window:"pre-jan", note:"Mega-scenario, beide bidders aanwezig"}
 ];
 
-const SO = [
+let SO = [
   {t:"Sell 25% JUN 4C (eerste tranche)", r:"Prijs > $4.20 (overhang absorbed)", tr:4.20},
   {t:"Sell 60% JUN 5C (HOOFDtrigger)", r:"Prijs > $5.60 (Alyeska resell zone)", tr:5.60},
   {t:"Sell 50% JUN 6C", r:"Prijs > $7.00 (deal hint / breakout)", tr:7.00},
@@ -374,12 +374,39 @@ const SO = [
 ];
 
 // Snapshots: 4 key prices bij JUN expiratie
-const SNAPS = [
+let SNAPS = [
   {label:"Huidig", price:CURRENT_PRICE, sub:"Warrant cap actief", badge:"NU"},
   {label:"EASL pop", price:4.50, sub:"Sentiment-rally", badge:"5%"},
   {label:"Roche Q4", price:8.50, sub:"EU licensing", badge:"25%"},
   {label:"Sanofi buyout", price:47.50, sub:"Q4-Q1 acquisition", badge:"30%"}
 ];
+
+// ===== DATA-SYNC =====
+// data.json wordt ververst uit de Notion-bron door .github/workflows/sync-alt-data.yml.
+// Lukt het laden niet (offline, file://, geen data.json), dan blijven de hardcoded
+// waarden hierboven staan — de monitor werkt dan nog, maar toont oude cijfers.
+const parseDate = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+
+async function loadData() {
+  try {
+    const r = await fetch("data.json", { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    if (d.today) TODAY = parseDate(d.today);
+    if (typeof d.currentPrice === "number") CURRENT_PRICE = d.currentPrice;
+    if (typeof d.basis === "number") BASIS = d.basis;
+    if (typeof d.shares === "number") SHARES = d.shares;
+    if (Array.isArray(d.cats))  CATS  = d.cats.map(c => [c[0], parseDate(c[1]), c[2], c[3], c[4]]);
+    if (Array.isArray(d.pos))   POS   = d.pos.map(o => ({ ...o, d: parseDate(o.d) }));
+    if (Array.isArray(d.scn))   SCN   = d.scn;
+    if (Array.isArray(d.so))    SO    = d.so;
+    if (Array.isArray(d.snaps)) SNAPS = d.snaps;
+    return true;
+  } catch (err) {
+    console.warn("data.json niet geladen — hardcoded fallback actief:", err.message);
+    return false;
+  }
+}
 
 // ===== HELPERS =====
 const $ = s => document.querySelector(s);
@@ -1046,7 +1073,9 @@ function initNotes() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadData();
+
   renderCats();
   renderScn();
   renderPSum();
